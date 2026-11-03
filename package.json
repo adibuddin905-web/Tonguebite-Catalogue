@@ -1,0 +1,29 @@
+{
+  "name": "catalogue-maker",
+  "version": "1.0.0",
+  "description": "Customizable product catalogue maker",
+  "main": "main.js",
+  "author": "TongueBite",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.0",
+    "font-list": "^1.5.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.catalogue.maker",
+    "productName": "Catalogue Maker",
+    "files": ["main.js", "preload.js", "index.html", "package.json"],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "publish": { "provider": "github", "owner": "adibuddin905-web", "repo": "Tonguebite-Catalogue", "releaseType": "release" }
+  }
+}
