@@ -43,7 +43,8 @@ const uid=()=>Math.random().toString(36).slice(2,8),r1=v=>Math.round(v*10)/10;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const col=c=>c&&c[0]=='@'?S.brand.pal[+c.slice(1)-1]||'#000':c||'#000';
 const fnt=f=>`'${f=='@h'?S.brand.font:(!f||f=='@b')?S.brand.bodyFont:f}'`;
-const tk=s=>(s||'').replace(/\{(\w+)\}/g,(m,k)=>S.brand[k]??m);
+let CP={};
+const tk=s=>(s||'').replace(/\{(\w+)\}/g,(m,k)=>k=='title'?(CP.title||CP.name||''):S.brand[k]??m);
 /* images are kept at full original quality; blob URLs only make redraws fast */
 const UC=new Map();
 const U=s=>{if(!s||s.slice(0,5)!='data:')return s;let u=UC.get(s);if(!u){const i=s.indexOf(','),bin=atob(s.slice(i+1)),a=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)a[j]=bin.charCodeAt(j);u=URL.createObjectURL(new Blob([a],{type:s.slice(5,s.indexOf(';'))}));UC.set(s,u)}return u};
@@ -69,7 +70,7 @@ function defaults(){const E=o=>({id:uid(),...o});return[
  E({t:'text',x:15,y:125,w:180,h:60,text:'Phone: {phone}\nEmail: {email}\nWeb: {web}\nFSSAI: {fssai}\nInstagram: {insta}',size:14,color:'@3',align:'center',font:'@b'})]}]}
 
 function elHTML(e){const lg=e.t=='logo',im=e.t=='image'||lg;
- let st=`left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;border-radius:${e.r||0}mm;`,inner='';
+ let st=`left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;border-radius:${e.r||0}mm;${e.t!='text'&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:''}`,inner='';
  if(e.t=='rect')st+=`background:${col(e.bg)};`;
  if(e.t=='text'){st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};`;inner=esc(tk(e.text)).replace(/\n/g,'<br>')}
  if(im){const s=lg?S.brand.logo:e.src,px=e.px??50,py=e.py??50;
@@ -82,18 +83,24 @@ function prodHF(p){const{W,H,m}=grid(p);
  return `<div class="el" style="left:0;top:0;width:${W}mm;height:20mm;background:${col('@1')}"></div><div class="el" style="left:${m}mm;top:4mm;width:${W-2*m-40}mm;height:12mm;font:700 20pt ${fnt('@h')};color:${col('@3')}">${esc(tk(p.title))}</div>`
  +(S.brand.logo?`<img class="el" src="${U(S.brand.logo)}" style="left:${W-m-30}mm;top:3mm;width:30mm;height:14mm;object-fit:contain">`:'')
  +`<div class="el" style="left:${m}mm;top:${H-9}mm;width:${W-2*m}mm;height:6mm;font:9pt ${fnt('@b')};color:${col('@1')};text-align:center">${esc(tk('{web}  |  {phone}  |  {email}'))}</div>`}
+const MEAS=new Set();
+function dims(q){if(q.img&&!(q.iw>0)&&!MEAS.has(q.id)){MEAS.add(q.id);const i=new Image();i.onload=()=>{q.iw=i.naturalWidth;q.ih=i.naturalHeight;draw()};i.src=U(q.img)}}
+const measureAll=()=>Promise.all(S.products.filter(q=>q.img&&!(q.iw>0)).map(q=>new Promise(res=>{const i=new Image();i.onload=()=>{q.iw=i.naturalWidth;q.ih=i.naturalHeight;res()};i.onerror=res;i.src=U(q.img)})));
 function prodCards(p){const{m,top,cols,rows,gw,gh}=grid(p),n=cols*rows,fs=Math.round(Math.max(7,Math.min(18,gw/8,gh/9))*2)/2,sm=Math.max(6,fs-3);let h='';
- (p.ids||[]).map(id=>S.products.find(x=>x.id==id)).filter(Boolean).slice(0,n).forEach((q,i)=>{
-  const sc=q.imgScale||100,ist=q.imgR>0?`max-width:${sc}%;max-height:${sc}%;border-radius:${q.imgR}mm`:`width:${sc}%;height:${sc}%;object-fit:contain`;
+ const bw=gw-4-6,bh=r1((gh-4-6)*((+p.imgFrac||55)/100));
+ (p.ids||[]).map(id=>S.products.find(x=>x.id==id)).filter(Boolean).slice(0,n).forEach((q,i)=>{dims(q);
+  const sc=(q.imgScale||100)/100,r=q.imgR>0?q.imgR:(+p.imgR||0);let ist='width:100%;height:100%;object-fit:contain';
+  if(q.iw>0&&q.ih>0){const a=q.iw/q.ih;let w=bw,hh=w/a;if(hh>bh){hh=bh;w=hh*a}ist=`width:${r1(w*sc)}mm;height:${r1(hh*sc)}mm;object-fit:cover;border-radius:${r}mm`}
   h+=`<div class="el" style="left:${m+(i%cols)*gw}mm;top:${top+Math.floor(i/cols)*gh}mm;width:${gw-4}mm;height:${gh-4}mm;background:#fff;border:.4mm solid ${col('@2')};border-radius:3mm;padding:3mm;display:flex;flex-direction:column;gap:1.5mm;font-family:${fnt('@b')}">
-  <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">${q.img?`<img src="${U(q.img)}" style="${ist}">`:''}</div>
+  <div style="height:${bh}mm;flex:none;display:flex;align-items:center;justify-content:center">${q.img?`<img src="${U(q.img)}" style="${ist}">`:''}</div>
+  <div style="flex:1;min-height:0;overflow:hidden">
   <div style="font:700 ${fs}pt ${fnt('@h')};color:${col('@1')}">${esc(q.name)}</div>
   <div style="font-size:${sm}pt;color:#666;font-weight:700">${esc(q.cat)}</div>
   <div style="font-size:${sm}pt">${esc(q.desc)}</div>
-  <div style="font-size:${sm}pt;color:#333">${esc(q.variants).replace(/\n/g,'<br>')}</div></div>`});
+  <div style="font-size:${sm}pt;color:#333">${esc(q.variants).replace(/\n/g,'<br>')}</div></div></div>`});
  return h}
 
-const pageHTML=p=>`<div class="pg" style="width:${S.size.w}mm;height:${S.size.h}mm;background:${col(p.bg)}${p.bgImg?`;background-image:url(${U(p.bgImg)});background-size:${p.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}">${p.type=='prod'&&!p.noHF?prodHF(p):''}${p.noMaster?'':S.master.map(elHTML).join('')}${p.type=='prod'?prodCards(p):''}${p.els.map(elHTML).join('')}</div>`;
+const pageHTML=p=>(CP=p,`<div class="pg" style="width:${S.size.w}mm;height:${S.size.h}mm;background:${col(p.bg)}${p.bgImg?`;background-image:url(${U(p.bgImg)});background-size:${p.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}">${p.type=='prod'&&!p.noHF?prodHF(p):''}${p.noMaster?'':S.master.map(elHTML).join('')}${p.type=='prod'?prodCards(p):''}${p.els.map(elHTML).join('')}</div>`);
 
 function draw(){const c=$('#stage'),W=S.size.w,H=S.size.h;
  Z=Math.max(.1,Math.min((c.clientWidth-40)/(W*PX),(c.clientHeight-40)/(H*PX)));
@@ -102,7 +109,7 @@ function draw(){const c=$('#stage'),W=S.size.w,H=S.size.h;
  if(s&&e){s.classList.add('sel');const o=(e.r||0)*.29;s.insertAdjacentHTML('beforeend',`<i class="hd" style="right:${o}mm;bottom:${o}mm"></i>`)}
  clearTimeout(tm);tm=setTimeout(()=>api.save(JSON.stringify(S)),800)}
 
-const F=(l,k,t='text',x='')=>{const v=get(k)??'';return `<label>${l}${t=='textarea'?`<textarea data-k="${k}">${esc(v)}</textarea>`:`<input data-k="${k}" type="${t}" step="any" ${x} ${t=='checkbox'?(v?'checked':''):`value="${esc(v)}"`}>`}</label>`};
+const F=(l,k,t='text',x='')=>{const v=get(k)??'';return `<label>${l}${t=='textarea'?`<textarea data-k="${k}">${esc(v)}</textarea>`:`<input data-k="${k}" type="${t}" ${x} step="any" ${t=='checkbox'?(v?'checked':''):`value="${esc(v)}"`}>`}</label>`};
 const SEL=(l,k,o,num)=>`<label>${l}<select data-k="${k}" ${num?'data-num="1"':''}>${o.map(([v,n])=>`<option value="${esc(v)}" ${String(get(k))==String(v)?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`;
 const C=(l,k)=>`<label>${l}</label><div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${S.brand.pal.map((c,i)=>`<button class="sw" style="background:${c}" title="Colour ${i+1}" onclick="setK('${k}','@${i+1}')"></button>`).join('')}<input type="color" data-k="${k}" value="${col(get(k))}"></div>`;
 const FO=()=>fonts.map(f=>[f,f]);
@@ -114,29 +121,29 @@ function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k
  if(tab=='prods'){const q=selProd();if(q&&!q.imgScale)q.imgScale=100;
   h+=`<button onclick="addProd()">+ Add product</button> <button onclick="imp()">Import Excel/CSV</button>`
   +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel()">${esc(p.name||'(new)')}</div>`).join('')
-  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size on page (%)','prod.imgScale','range','min="20" max="100"')+F('Image corner radius (mm)','prod.imgR','number','min="0"')+`<p><button onclick="img(selProd(),'img')">Choose image</button> <button onclick="delProd()">Delete</button></p>`:'<p>Excel/CSV columns: name, category, description, variants</p>')}
+  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size on page (%)','prod.imgScale','range','min="20" max="100"')+F('Image corner radius (mm) - overrides page setting','prod.imgR','number','min="0"')+`<p><button onclick="img(selProd(),'img')">Choose image</button> <button onclick="delProd()">Delete</button></p>`:'<p>Excel/CSV columns: name, category, description, variants</p>')}
  if(tab=='brand')h+=`<p><button onclick="img(S.brand,'logo')">Choose logo</button></p>`
   +S.brand.pal.map((c,i)=>F('Colour '+(i+1),'pal.'+i,'color')+(i>2&&i==S.brand.pal.length-1?`<button onclick="S.brand.pal.pop();panel();draw()">Remove colour ${i+1}</button>`:'')).join('')
   +`<p><button onclick="S.brand.pal.push('#888888');panel();draw()">+ Add colour</button></p>`
   +SEL('Heading font','brand.font',FO())+SEL('Body font','brand.bodyFont',FO())+F('Phone','brand.phone')+F('Email','brand.email')+F('Website','brand.web')+F('FSSAI no.','brand.fssai')+F('Instagram','brand.insta')
-  +'<p>In any text, type {phone} {email} {web} {fssai} {insta} to insert these automatically.</p>';
+  +'<p>In any text, type {phone} {email} {web} {fssai} {insta} to insert these automatically. {title} inserts the page heading.</p>';
  $('#L').innerHTML=h}
 
-function R(){const p=S.pages[cur],e=selEl();
+function R(){const p=S.pages[cur],e=selEl();if(p.type=='prod'&&!p.imgFrac)p.imgFrac=55;
  let h='<b>Page</b>'+F('Name','page.name')+C('Background colour','page.bg')
  +`<p><button onclick="img(S.pages[cur],'bgImg')">Background image</button> <button onclick="S.pages[cur].bgImg='';draw()">Remove</button></p>`
  +SEL('Background image fit','page.bgFit',[['cover','Fill (crop)'],['contain','Fit inside'],['100% 100%','Stretch']])
  +F('Hide shared header/footer on this page','page.noMaster','checkbox');
- if(p.type=='prod')h+=F('Heading','page.title')+F('Columns','page.cols','number','min="1"')+F('Rows','page.rows','number','min="1"')+F('Hide built-in header/footer','page.noHF','checkbox')
+ if(p.type=='prod')h+=F('Heading','page.title')+F('Columns','page.cols','number','min="1"')+F('Rows','page.rows','number','min="1"')+F('Hide built-in header/footer','page.noHF','checkbox')+(p.noHF?'':'<p><button onclick="convHF()">Edit header/footer (make editable)</button></p>')+F('Image area height (%)','page.imgFrac','range','min="20" max="80"')+F('Product image corner radius (mm)','page.imgR','number','min="0"')
   +`<label>Products on this page (max ${(+p.cols||1)*(+p.rows||1)})</label>`+S.products.map(x=>`<div><input type="checkbox" ${(p.ids||[]).includes(x.id)?'checked':''} onchange="tog('${x.id}')"> ${esc(x.name)}</div>`).join('');
  h+=`<p><button onclick="addEl('text')">+ Text</button> <button onclick="addEl('image')">+ Image</button> <button onclick="addEl('rect')">+ Box</button></p>`;
  if(e){const im=e.t=='image'||e.t=='logo';if(im&&e.lock===undefined)e.lock=1;h+='<hr>';
   if(e.t=='text')h+=F('Text','el.text','textarea')+F('Size (pt)','el.size','number')+SEL('Font','el.font',[['@h','Brand heading'],['@b','Brand body'],...FO()])+C('Colour','el.color')+F('Bold','el.bold','checkbox')+SEL('Text align','el.align',[['left','Left'],['center','Center'],['right','Right']]);
-  if(e.t=='rect')h+=C('Fill','el.bg');
+  if(e.t=='rect')h+=C('Fill colour','el.bg')+'<p><button onclick="setK(\'el.bg\',\'transparent\')">No fill</button></p>';
   if(e.t=='image')h+=`<p><button onclick="img(selEl())">Choose image</button></p>`;
   if(e.t=='logo')h+='<p>The logo comes from the Brand tab.</p>';
   if(im)h+=SEL('Fit','el.fit',[['cover','Fill frame (crop)'],['contain','Show whole image']])+F('Crop zoom (%)','el.zoom','range','min="100" max="400"')+F('Crop left-right','el.px','range','min="0" max="100"')+F('Crop top-bottom','el.py','range','min="0" max="100"')+F('Lock ratio when resizing','el.lock','checkbox')+`<p><button onclick="matchRatio()">Match frame to image ratio</button></p>`;
-  if(e.t!='text')h+=F('Corner radius (mm)','el.r','number','min="0"');
+  if(e.t!='text')h+=F('Corner radius (mm)','el.r','number','min="0"')+C('Border colour','el.bc')+F('Border size (mm)','el.bw','number','min="0" step="0.5"');
   h+=`<label>Align on page</label><div class="sm"><button onclick="al('l')">Left</button> <button onclick="al('c')">Centre</button> <button onclick="al('r')">Right</button> <button onclick="al('t')">Top</button> <button onclick="al('m')">Middle</button> <button onclick="al('b')">Bottom</button></div>`
   +['x','y','w','h'].map(k=>F(k.toUpperCase()+' (mm)','el.'+k,'number')).join('')
   +`<label><input type="checkbox" ${S.master.includes(e)?'checked':''} onchange="toggleAll(this.checked)"> Show on every page (header/footer)</label><p><button onclick="delEl()">Delete</button></p>`}
@@ -154,14 +161,17 @@ const delEl=()=>{S.pages[cur].els=S.pages[cur].els.filter(e=>e.id!=sel);S.master
 function toggleAll(on){const e=selEl(),p=S.pages[cur];if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
 function al(a){const e=selEl(),W=S.size.w,H=S.size.h;if(a=='l')e.x=0;if(a=='c')e.x=(W-e.w)/2;if(a=='r')e.x=W-e.w;if(a=='t')e.y=0;if(a=='m')e.y=(H-e.h)/2;if(a=='b')e.y=H-e.h;e.x=r1(e.x);e.y=r1(e.y);draw();panel()}
 function matchRatio(){const e=selEl(),s=e.t=='logo'?S.brand.logo:e.src;if(!s)return;const i=new Image();i.onload=()=>{e.h=r1(e.w*i.naturalHeight/i.naturalWidth);draw();panel()};i.src=U(s)}
-async function img(o,k='src'){const d=await api.img();if(d){o[k]=d;draw();panel()}}
+async function img(o,k='src'){const d=await api.img();if(d){o[k]=d;if(k=='img'){o.iw=0;MEAS.delete(o.id)}draw();panel()}}
+function convHF(){const p=S.pages[cur],W=S.size.w,H=S.size.h,E=o=>({id:uid(),...o});
+ p.els.unshift(E({t:'rect',x:0,y:0,w:W,h:20,bg:'@1'}),E({t:'text',x:10,y:4,w:W-60,h:12,text:'{title}',size:20,color:'@3',bold:1,align:'left',font:'@h'}),E({t:'logo',x:W-40,y:3,w:30,h:14,lock:1}),E({t:'text',x:10,y:H-9,w:W-20,h:6,text:'{web}  |  {phone}  |  {email}',size:9,color:'@1',align:'center',font:'@b'}));
+ p.noHF=1;panel();draw()}
 function addProd(){const p={id:uid(),name:'New product',cat:'',desc:'',variants:'',img:'',imgScale:100};S.products.push(p);selP=p.id;panel()}
 function delProd(){S.products=S.products.filter(p=>p.id!=selP);S.pages.forEach(p=>p.ids&&(p.ids=p.ids.filter(i=>i!=selP)));selP=null;panel();draw()}
 async function imp(){const r=await api.sheet();if(!r)return;
  r.forEach(o=>{const g=n=>{const k=Object.keys(o).find(x=>x.trim().toLowerCase()==n);return k?String(o[k]):''};
   S.products.push({id:uid(),name:g('name'),cat:g('category'),desc:g('description'),variants:g('variants').replace(/\s*[|;]\s*/g,'\n'),img:'',imgScale:100})});panel();draw()}
 
-async function pdf(){$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
+async function pdf(){await measureAll();$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
  $('#print').innerHTML=S.pages.map(pageHTML).join('');const r=await api.pdf();if(r)alert('PDF saved:\n'+r)}
 async function openP(){const j=await api.open();if(j){S=JSON.parse(j);mig();cur=0;sel=null;lastSize={...S.size};panel();draw()}}
 const saveP=()=>api.saveAs(JSON.stringify(S));
@@ -184,5 +194,5 @@ $('#canvas').addEventListener('mousedown',e=>{
 addEventListener('resize',draw);
 (async()=>{try{fonts=(await api.fonts()).sort()}catch{}
  const j=await api.load();if(j)S=JSON.parse(j);else S.pages=defaults();
- mig();lastSize={...S.size};panel();draw()})();
+ mig();lastSize={...S.size};await measureAll();panel();draw()})();
 </script></body></html>
