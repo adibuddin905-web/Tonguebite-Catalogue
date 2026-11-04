@@ -14,7 +14,7 @@ header button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
 #R{border-right:0;border-left:1px solid var(--bd)}
 .side b{display:block;margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--mu)}
 .hint{color:var(--mu);font-size:12px;margin:6px 0}
-#stage{overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
+#stage{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
 #canvas{position:relative;background:#fff;box-shadow:0 4px 24px #0003}
 label{display:block;margin:8px 0 3px;font-size:11px;color:var(--mu)}
 input:not([type=checkbox]):not([type=color]),textarea,select{width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;font:inherit;background:#fff}
@@ -42,22 +42,34 @@ textarea{height:64px}
 .hd.nw{left:0;top:0;cursor:nwse-resize}.hd.n{left:50%;top:0;cursor:ns-resize}.hd.ne{left:100%;top:0;cursor:nesw-resize}.hd.e{left:100%;top:50%;cursor:ew-resize}
 .hd.se{left:100%;top:100%;cursor:nwse-resize}.hd.s{left:50%;top:100%;cursor:ns-resize}.hd.sw{left:0;top:100%;cursor:nesw-resize}.hd.w{left:0;top:50%;cursor:ew-resize}
 .bdg{position:absolute;left:0;top:0;z-index:9;background:#2563eb;color:#fff;font:7pt sans-serif;padding:.4mm 1.6mm;pointer-events:none}
+#bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:8px;background:#111827;color:#fff;padding:7px 12px;border-radius:8px;z-index:5;box-shadow:0 4px 16px #0004;font-size:12px;white-space:nowrap}
+#bar button{background:#374151;color:#fff;border-color:#4b5563;padding:4px 9px}
+#bar button.pri{background:var(--ac);border-color:var(--ac)}
+.ov.crop .hd{background:#111;border-color:#fff;border-radius:0}
+.fpb{width:100%;text-align:left;font-size:15px;padding:7px 10px}
+#fpl{position:fixed;right:292px;top:64px;width:270px;max-height:72vh;display:none;flex-direction:column;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 10px 34px #0004;z-index:50;overflow:hidden}
+#fpl input{border:0;border-bottom:1px solid var(--bd);border-radius:0;padding:9px 10px;width:100%;font:inherit}
+#fpv{overflow:auto;flex:1}
+.fi{padding:7px 12px;font-size:17px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi.cur{border-left:3px solid var(--ac)}
+.fi.on,.fi:hover{background:#e8f0fe}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
 .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0001;color:#888;font:10pt sans-serif}
 #print{display:none}
 @media print{body{display:block;height:auto;background:none}.ui{display:none!important}#print{display:block}.ph,.bdg{display:none}}
 </style></head><body>
 <header class="ui"><b>Catalogue Maker</b>
-<button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
+<button onclick="undo()">Undo</button><button onclick="redo()">Redo</button><button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
 <button class="pri" onclick="pdf()">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
 <aside class="side ui" id="L"></aside>
-<main id="stage" class="ui"><div id="canvas"></div></main>
+<main id="stage" class="ui"><div id="bar"><span>Crop mode: drag the handles to crop, drag the picture to move it</span><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button><button class="pri" onclick="cropDone()">Done</button></div><div id="canvas"></div></main>
 <aside class="side ui" id="R"></aside>
+<div id="fpl" class="ui"><input id="fps" placeholder="Search fonts. Scroll or hover to preview" oninput="fpRender(this.value)" onkeydown="fpKey(event)"><div id="fpv"></div></div>
 <div id="print"></div><style id="pgs"></style>
 <script>
 const PX=3.7795,$=s=>document.querySelector(s);
 let S={brand:{pal:['#7a1f1f','#e8a317','#fff8ec'],font:'Arial',bodyFont:'Arial',logo:'',phone:'+91-0000000000',email:'support@example.com',web:'www.example.com',fssai:'',insta:''},size:{w:210,h:297},master:[],products:[],pages:[]};
-let newTpl=null,nSlots=2,cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
+let H=[],hi=-1,ct,IMG={},fpK=null,fpO=null,fpC=[],fpL=[],fpI=-1,lastClk={id:0,t:0},newTpl=null,nSlots=2,cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
 const uid=()=>Math.random().toString(36).slice(2,8),r1=v=>Math.round(v*10)/10;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const col=c=>c&&c[0]=='@'?S.brand.pal[+c.slice(1)-1]||'#000':c||'#000';
@@ -66,7 +78,15 @@ let CP={};
 const tk=s=>(s||'').replace(/\{(\w+)\}/g,(m,k)=>k=='title'?(CP.title||CP.name||''):S.brand[k]??m);
 /* images are kept at full original quality; blob URLs only make redraws fast */
 const UC=new Map();
-const U=s=>{if(!s||s.slice(0,5)!='data:')return s;let u=UC.get(s);if(!u){const i=s.indexOf(','),bin=atob(s.slice(i+1)),a=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)a[j]=bin.charCodeAt(j);u=URL.createObjectURL(new Blob([a],{type:s.slice(5,s.indexOf(';'))}));UC.set(s,u)}return u};
+const U=s=>{if(!s||typeof s!='string')return s;const d=s.startsWith('i:')?(IMG[s]||''):s;if(d.slice(0,5)!='data:')return d||s;let u=UC.get(s);if(!u){const i=d.indexOf(','),bin=atob(d.slice(i+1)),a=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)a[j]=bin.charCodeAt(j);u=URL.createObjectURL(new Blob([a],{type:d.slice(5,d.indexOf(';'))}));UC.set(s,u)}return u};
+const reg=d=>{for(const k in IMG)if(IMG[k]===d)return k;const k='i:'+uid();IMG[k]=d;return k};
+function compact(o){for(const k in o){const v=o[k];if(typeof v=='string'){if(v.startsWith('data:'))o[k]=reg(v)}else if(v&&typeof v=='object')compact(v)}}
+function pack(){const js=JSON.stringify(S),m={};(js.match(/i:[a-z0-9]+/g)||[]).forEach(k=>{if(IMG[k])m[k]=IMG[k]});return JSON.stringify({S,IMG:m})}
+function load(j){const o=JSON.parse(j);if(o&&o.S){S=o.S;Object.assign(IMG,o.IMG||{})}else S=o;compact(S)}
+function commit(){if(fpK!==null)return;const j=JSON.stringify(S);if(H[hi]===j)return;H=H.slice(0,hi+1);H.push(j);if(H.length>80)H.shift();hi=H.length-1}
+function restore(){S=JSON.parse(H[hi]);mig();cur=Math.min(cur,S.pages.length-1);cropId=null;lastSize={...S.size};panel();draw()}
+function undo(){clearTimeout(ct);commit();if(hi>0){hi--;restore()}}
+function redo(){clearTimeout(ct);commit();if(hi<H.length-1){hi++;restore()}}
 const findEl=id=>S.pages[cur].els.find(e=>e.id==id)||S.master.find(e=>e.id==id);
 const selEl=()=>findEl(sel),selProd=()=>S.products.find(p=>p.id==selP);
 const root=()=>({brand:S.brand,pal:S.brand.pal,size:S.size,el:selEl()||{},page:S.pages[cur],prod:selProd()||{}});
@@ -87,6 +107,7 @@ function mkTpl(name,cols,rows,nohf,n){const W=S.size.w,H=S.size.h,m=10,top=26,gw
  return{id:uid(),name,type:'ptpl',bg:'@3',els,cc:cols,rr:rows,nh:!!nohf}}
 function mig(){const b=S.brand;if(!b.pal)b.pal=[b.c1||'#7a1f1f',b.c2||'#e8a317',b.c3||'#fff8ec'];S.master=S.master||[];
  S.products.forEach(q=>{if(!q.imgs)q.imgs=q.img?[{s:q.img,iw:q.iw||0,ih:q.ih||0}]:[]});
+ [...S.pages.flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&e.lock===undefined)e.lock=1});
  S.pages.forEach(p=>{if(p.type=='prod'&&!p.cols&&!p.tpl){const n=+p.layout||2,l=S.size.w>S.size.h;p.cols=n==1?1:n==2?(l?2:1):2;p.rows=n==1?1:n==2?(l?1:2):2}});
  if(!cardPage())S.pages.push(cardDef());
  if(!S.pages.some(p=>p.type=='ptpl')){const l=S.size.w>S.size.h;[['1 product per page',1,1],['2 products per page',l?2:1,l?1:2],['4 products per page',2,2]].forEach(a=>S.pages.push(mkTpl(...a)))}
@@ -113,19 +134,19 @@ function crop(e){const lg=e.t=='logo',iw=lg?S.brand.liw:e.iw,ih=lg?S.brand.lih:e
 function elHTML(e,q,ro){if(e.hid)return'';const lg=e.t=='logo',im=e.t=='image'||lg,tx=e.t=='text'||e.t=='pf';
  const rs=[e.r1,e.r2,e.r3,e.r4].map(v=>(v??e.r??0)+'mm').join(' ');let elr=rs,st='',inner='';
  if(e.t=='rect')st+=`background:${col(e.bg)};`;
- if(tx){const v=e.t=='pf'?String((q||SAMPLE)[e.f]??''):tk(e.text);st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};`;inner=esc(v).replace(/\n/g,'<br>')}
+ if(tx){const v=e.t=='pf'?String((q||SAMPLE)[e.f]??''):tk(e.text);st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};${e.t=='text'&&e.hug?'white-space:pre;':''}`;inner=esc(v).replace(/\n/g,'<br>')}
  if(im){const s=lg?S.brand.logo:e.src;if(s){const c=crop(e);inner=`<img src="${U(s)}" style="left:${c.cx*100}%;top:${c.cy*100}%;width:${c.cw*100}%;height:${c.ch*100}%">`}else inner=`<div class="ph">${lg?'Logo':'Image'}</div>`}
  if(e.t=='pimg'){const m=q&&q.imgs&&q.imgs[(e.idx||1)-1];
   if(m&&m.s){dims(m);const sc=(q.imgScale||100)/100;
    if(e.fit=='cover'||!(m.iw>0)){inner=`<img src="${U(m.s)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
    else{const a=m.iw/m.ih;let w=e.w,h=w/a;if(h>e.h){h=e.h;w=h*a}w*=sc;h*=sc;inner=`<img src="${U(m.s)}" style="left:${r1((e.w-w)/2)}mm;top:${r1((e.h-h)/2)}mm;width:${r1(w)}mm;height:${r1(h)}mm;border-radius:${rs}">`;elr='0mm'}}
   else inner=`<div class="ph">Product image ${e.idx||1}</div>`}
- st=`left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;border-radius:${elr};`+(!tx&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:'')+st;
+ st=`left:${e.x}mm;top:${e.y}mm;width:${tx&&e.t=='text'&&e.hug?'max-content':e.w+'mm'};height:${tx?'auto':e.h+'mm'};border-radius:${elr};`+(!tx&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:'')+st;
  return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="${st}">${inner}</div>`}
-function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;let h=`<div class="ov" style="left:${o.x}mm;top:${o.y}mm;width:${o.w}mm;height:${o.h}mm">`;
+function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;let h=`<div class="ov${cm?' crop':''}" style="left:${o.x}mm;top:${o.y}mm;width:${o.w}mm;height:${o.h}mm">`;
  if(cm){const c=crop(o),ix=c.cx*o.w,iy=c.cy*o.h,iw=c.cw*o.w,ih=c.ch*o.h,src=o.t=='logo'?S.brand.logo:o.src;
   h+=`<img class="dim" src="${U(src)}" style="left:${ix}mm;top:${iy}mm;width:${iw}mm;height:${ih}mm;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${-ix}mm ${-iy}mm,${o.w-ix}mm ${-iy}mm,${o.w-ix}mm ${o.h-iy}mm,${-ix}mm ${o.h-iy}mm,${-ix}mm ${-iy}mm)">`}
- return h+['nw','n','ne','e','se','s','sw','w'].map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')+'</div>'}
+ return h+(o.t=='text'||o.t=='pf'?['nw','ne','e','se','sw','w']:['nw','n','ne','e','se','s','sw','w']).map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')+'</div>'}
 
 const MEAS=new Set();
 function dims(m){if(m&&m.s&&!(m.iw>0)&&!MEAS.has(m)){MEAS.add(m);const i=new Image();i.onload=()=>{m.iw=i.naturalWidth;m.ih=i.naturalHeight;draw()};i.src=U(m.s)}}
@@ -142,13 +163,19 @@ const pageHTML=p=>{CP=p;const z=SZ(p),cd=p.type=='card',pt=p.type=='ptpl',T=p.ty
 function draw(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
  Z=Math.max(.1,Math.min((c.clientWidth-60)/(z.w*PX),(c.clientHeight-60)/(z.h*PX)));
  const cv=$('#canvas');cv.style.zoom=Z;cv.style.setProperty('--hs',(9/(Z*PX)).toFixed(2)+'mm');
- cv.innerHTML=pageHTML(p)+overlay(selEl());
- clearTimeout(tm);tm=setTimeout(()=>api.save(JSON.stringify(S)),800)}
+ cv.innerHTML=pageHTML(p);
+ const pe=cv.firstElementChild,g=pe&&pe.getBoundingClientRect?pe.getBoundingClientRect().width/(z.w*PX):0;
+ if(g>0)cv.querySelectorAll('[data-id]').forEach(n=>{const e=findEl(n.dataset.id);if(e&&(e.t=='text'||e.t=='pf')){const r=n.getBoundingClientRect();e.h=r1(r.height/g/PX);if(e.t=='text'&&e.hug)e.w=r1(r.width/g/PX)}});
+ cv.insertAdjacentHTML('beforeend',overlay(selEl()));
+ $('#bar').style.display=cropId?'flex':'none';
+ clearTimeout(tm);tm=setTimeout(()=>api.save(pack()),800);clearTimeout(ct);ct=setTimeout(commit,350)}
 
 const F=(l,k,t='text',x='')=>{const v=get(k)??'';return `<label>${l}${t=='textarea'?`<textarea data-k="${k}">${esc(v)}</textarea>`:`<input data-k="${k}" type="${t}" ${x} step="any" ${t=='checkbox'?(v?'checked':''):`value="${esc(v)}"`}>`}</label>`};
 const SEL=(l,k,o,num)=>`<label>${l}<select data-k="${k}" ${num?'data-num="1"':''}>${o.map(([v,n])=>`<option value="${esc(v)}" ${String(get(k))==String(v)?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`;
 const C=(l,k)=>{const v=get(k),hx=col(v);return `<label>${l}</label><div class="cp">${S.brand.pal.map((c,i)=>`<button class="sw ${v=='@'+(i+1)?'on':''}" style="background:${c}" title="Brand colour ${i+1}" onclick="setK('${k}','@${i+1}')"></button>`).join('')}<button class="sw nof ${v=='transparent'?'on':''}" title="No colour" onclick="setK('${k}','transparent')"></button><input type="color" data-k="${k}" value="${/^#[0-9a-f]{6}$/i.test(hx)?hx:'#000000'}"><input class="hex" value="${esc(hx)}" onchange="hexK('${k}',this.value)"></div>`};
 const FO=()=>fonts.map(f=>[f,f]);
+const fname=v=>v=='@h'?'Brand heading font':v=='@b'?'Brand body font':v;
+const FP=(l,k,sp)=>`<label>${l}</label><button class="fpb" style="font-family:${fnt(get(k))}" onclick="fpOpen('${k}',${sp?1:0})">${esc(fname(get(k)))}</button>`;
 
 const lab=e=>e.t=='slot'?'Product slot '+e.i:e.t=='text'?'Text: '+String(e.text).slice(0,14):e.t=='pf'?'Field: '+e.f:e.t=='pimg'?'Product image':e.t=='image'?'Image':e.t=='logo'?'Logo':'Box';
 function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';panel()">${n}</button>`;
@@ -166,7 +193,7 @@ function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k
  if(tab=='brand')h+=`<p><button onclick="img(S.brand,'logo')">Choose logo</button></p>`
   +S.brand.pal.map((c,i)=>F('Colour '+(i+1),'pal.'+i,'color')+(i>2&&i==S.brand.pal.length-1?`<button onclick="S.brand.pal.pop();panel();draw()">Remove colour ${i+1}</button>`:'')).join('')
   +`<p><button onclick="S.brand.pal.push('#888888');panel();draw()">+ Add colour</button></p>`
-  +SEL('Heading font','brand.font',FO())+SEL('Body font','brand.bodyFont',FO())+F('Phone','brand.phone')+F('Email','brand.email')+F('Website','brand.web')+F('FSSAI no.','brand.fssai')+F('Instagram','brand.insta')
+  +FP('Heading font','brand.font')+FP('Body font','brand.bodyFont')+F('Phone','brand.phone')+F('Email','brand.email')+F('Website','brand.web')+F('FSSAI no.','brand.fssai')+F('Instagram','brand.insta')
   +'<p class="hint">In any text type {phone} {email} {web} {fssai} {insta}. {title} inserts the page heading.</p>';
  $('#L').innerHTML=h}
 
@@ -186,17 +213,17 @@ function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.
   if(e.t=='text')h+=F('Text','el.text','textarea');
   if(e.t=='pf')h+=SEL('Product field','el.f',[['name','Name'],['cat','Category'],['desc','Description'],['variants','Sizes & prices']]);
   if(e.t=='slot')h+=F('Product number','el.i','number','min="1"')+'<p class="hint">Product 1 goes in slot 1, and so on. The card design is scaled to fit this box.</p>';
-  if(tx)h+=F('Size (pt)','el.size','number')+SEL('Font','el.font',[['@h','Brand heading'],['@b','Brand body'],...FO()])+C('Colour','el.color')+F('Bold','el.bold','checkbox')+SEL('Text align','el.align',[['left','Left'],['center','Center'],['right','Right']]);
+  if(tx)h+=F('Size (pt)','el.size','number')+(e.t=='text'?F('Fit box to text','el.hug','checkbox'):'')+FP('Font','el.font',1)+C('Colour','el.color')+F('Bold','el.bold','checkbox')+SEL('Text align','el.align',[['left','Left'],['center','Center'],['right','Right']]);
   if(e.t=='rect')h+=C('Fill colour','el.bg');
   if(e.t=='image')h+=`<p><button onclick="img(selEl())">Choose image</button></p>`;
   if(e.t=='logo')h+='<p class="hint">The logo comes from the Brand tab.</p>';
   if(e.t=='pimg')h+=SEL('Which product image','el.idx',[[1,'Image 1'],[2,'Image 2'],[3,'Image 3'],[4,'Image 4'],[5,'Image 5'],[6,'Image 6']],1)+SEL('Image fit','el.fit',[['contain','Whole image'],['cover','Fill frame (crop)']])+'<p class="hint">Corner radius below rounds every product image. Per-product size is in the Products tab.</p>';
-  if(im)h+=`<b>Crop</b><div class="sm">${cropId==e.id?'<button onclick="cropDone()">Done</button>':'<button onclick="cropOn()">Crop with mouse</button>'}<button onclick="zoomImg(1.1)">Zoom +</button><button onclick="zoomImg(1/1.1)">Zoom -</button><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Whole image</button></div><p class="hint">Double-click an image to crop. Corner handles resize it proportionally, side handles crop.</p>`+F('Lock ratio on corner resize','el.lock','checkbox');
+  if(im)h+=`<b>Crop</b><div class="sm">${cropId==e.id?'<button onclick="cropDone()">Done</button>':'<button onclick="cropOn()">Crop with mouse</button>'}<button onclick="zoomImg(1.1)">Zoom +</button><button onclick="zoomImg(1/1.1)">Zoom -</button><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button></div><p class="hint">Double-click an image to crop. Corner handles resize it proportionally, side handles crop.</p>`+F('Lock ratio on corner resize','el.lock','checkbox');
   if(!tx&&e.t!='slot')h+=F('Corner radius - all corners (mm)','el.r','number','min="0"')+'<label>Round only some corners</label><div class="sm"><button onclick="rcSet(\'top\')">Top</button><button onclick="rcSet(\'bottom\')">Bottom</button><button onclick="rcSet(\'left\')">Left</button><button onclick="rcSet(\'right\')">Right</button><button onclick="rcSet(\'all\')">All</button><button onclick="rcSet(\'none\')">None</button></div><label>Each corner (mm)</label><div class="g2">'+[['r1','Top-left'],['r2','Top-right'],['r4','Bottom-left'],['r3','Bottom-right']].map(([k,n])=>F(n,'el.'+k,'number','min="0" placeholder="'+(e.r||0)+'"')).join('')+'</div>';
   if(e.t=='rect'||im)h+=C('Border colour','el.bc')+F('Border size (mm)','el.bw','number','min="0" step="0.5"');
   h+=`<b>Arrange</b><div class="sm"><button onclick="zo('front')">Bring to front</button><button onclick="zo('fwd')">Forward</button><button onclick="zo('bwd')">Backward</button><button onclick="zo('back')">Send to back</button></div>`
   +`<b>Align on page</b><div class="sm"><button onclick="al('l')">Left</button><button onclick="al('c')">Centre</button><button onclick="al('r')">Right</button><button onclick="al('t')">Top</button><button onclick="al('m')">Middle</button><button onclick="al('b')">Bottom</button></div>`
-  +`<b>Position and size (mm)</b>`+['x','y','w','h'].map(k=>F(k.toUpperCase(),'el.'+k,'number')).join('')+F('Locked (cannot be moved)','el.lk','checkbox')
+  +`<b>Position and size (mm)</b>`+(tx?['x','y','w']:['x','y','w','h']).map(k=>F(k.toUpperCase(),'el.'+k,'number')).join('')+F('Locked (cannot be moved)','el.lk','checkbox')
   +(cd||p.type=='ptpl'||e.t=='slot'?'':`<label><input type="checkbox" ${S.master.includes(e)?'checked':''} onchange="toggleAll(this.checked)"> Show on every page (header/footer)</label>`)+`<p><button onclick="delEl()">Delete</button></p>`}
  $('#R').innerHTML=h}
 const panel=()=>{L();R()};
@@ -219,10 +246,10 @@ function autoPages(){const base=S.pages[cur];if(!slotsOf(base).length)return;let
  while(g++<200){const u=used(),rest=S.products.filter(q=>!u.has(q.id));if(!rest.length)break;const at=Math.min(cur+1,tIdx()),np={name:'Products',type:'prod',tpl:base.tpl,title:base.title||'Our Products',ids:[],els:[]};S.pages.splice(at,0,np);cur=at;slotsOf(np).forEach(x=>{if(rest.length)np.ids[x.i-1]=rest.shift().id})}
  sel=null;panel();draw()}
 function addTpl(){const n=Math.max(1,Math.min(12,nSlots||2)),l=S.size.w>S.size.h,c=n==1?1:n==2?(l?2:1):Math.ceil(Math.sqrt(n)),t=mkTpl(n+(n==1?' product':' products')+' (custom)',c,Math.ceil(n/c),false,n);S.pages.push(t);newTpl=t.id;go(S.pages.length-1)}
-async function pset(i){const d=await api.img();if(d){selProd().imgs[i]={s:d,iw:0,ih:0};await measureAll();draw();panel()}}
+async function pset(i){const d=await api.img();if(d){selProd().imgs[i]={s:reg(d),iw:0,ih:0};await measureAll();draw();panel()}}
 const pdel=i=>{selProd().imgs.splice(i,1);panel();draw()};
 function resetCard(){if(!confirm('Reset the card design to the default?'))return;const i=S.pages.findIndex(p=>p.type=='card');S.pages[i]=cardDef();go(i)}
-function addEl(t,f){const tx=t=='text'||t=='pf',e={id:uid(),t,x:10,y:10,w:tx?60:t=='slot'?70:50,h:tx?10:t=='slot'?100:40,...(t=='text'?{text:'New text',size:16,color:'@1',font:'@b',align:'left'}:t=='pf'?{f,size:10,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:t=='pimg'?{fit:'contain',r:0,idx:S.pages[cur].els.filter(x=>x.t=='pimg').length+1}:t=='slot'?{i:S.pages[cur].els.filter(x=>x.t=='slot').length+1,w:70,h:100}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;panel();draw()}
+function addEl(t,f){const tx=t=='text'||t=='pf',e={id:uid(),t,x:10,y:10,w:tx?60:t=='slot'?70:50,h:tx?10:t=='slot'?100:40,...(t=='text'?{text:'New text',hug:1,size:16,color:'@1',font:'@b',align:'left'}:t=='pf'?{f,size:10,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:t=='pimg'?{fit:'contain',r:0,idx:S.pages[cur].els.filter(x=>x.t=='pimg').length+1}:t=='slot'?{i:S.pages[cur].els.filter(x=>x.t=='slot').length+1,w:70,h:100}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;panel();draw()}
 const delEl=()=>{S.pages[cur].els=S.pages[cur].els.filter(e=>e.id!=sel);S.master=S.master.filter(e=>e.id!=sel);sel=null;cropId=null;panel();draw()};
 function toggleAll(on){const e=selEl(),p=S.pages[cur];if(!e)return;if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
 function al(a){const e=selEl(),z=SZ(S.pages[cur]);if(a=='l')e.x=0;if(a=='c')e.x=(z.w-e.w)/2;if(a=='r')e.x=z.w-e.w;if(a=='t')e.y=0;if(a=='m')e.y=(z.h-e.h)/2;if(a=='b')e.y=z.h-e.h;e.x=r1(e.x);e.y=r1(e.y);draw();panel()}
@@ -233,8 +260,14 @@ const pick=id=>{sel=id;cropId=null;panel();draw()};
 const cropOn=()=>{cropId=sel;panel();draw()},cropDone=()=>{cropId=null;panel();draw()};
 function rcSet(m){const o=selEl(),v=o.r1??o.r2??o.r3??o.r4??o.r??0,n=v>0?v:5,mp={top:[1,1,0,0],bottom:[0,0,1,1],left:[1,0,0,1],right:[0,1,1,0],all:[1,1,1,1],none:[0,0,0,0]}[m];['r1','r2','r3','r4'].forEach((k,i)=>o[k]=mp[i]?n:0);o.r=0;panel();draw()}
 function zoomImg(f){const o=selEl(),c=crop(o);Object.assign(o,{cx:.5-(.5-c.cx)*f,cy:.5-(.5-c.cy)*f,cw:c.cw*f,ch:c.ch*f});draw()}
-function fitImg(fill){const o=selEl(),lg=o.t=='logo',iw=lg?S.brand.liw:o.iw,ih=lg?S.brand.lih:o.ih;if(!(iw>0))return;const s=(fill?Math.max:Math.min)(o.w/iw,o.h/ih),cw=iw*s/o.w,ch=ih*s/o.h;Object.assign(o,{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch});draw()}
-async function img(o,k='src'){const d=await api.img();if(d){o[k]=d;if(k=='src'){o.iw=0;o.cw=0}if(k=='img'){o.iw=0;MEAS.delete(o.id)}if(k=='logo')S.brand.liw=0;await measureAll();draw();panel()}}
+function fitImg(fill){const o=selEl(),lg=o.t=='logo',iw=lg?S.brand.liw:o.iw,ih=lg?S.brand.lih:o.ih;if(!(iw>0))return;
+ if(fill){const s=Math.max(o.w/iw,o.h/ih),cw=iw*s/o.w,ch=ih*s/o.h;Object.assign(o,{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch})}else{o.h=r1(o.w*ih/iw);o.cw=0}
+ draw();panel()}
+async function img(o,k='src'){const d=await api.img();if(!d)return;const first=k=='src'&&!o.src;o[k]=reg(d);if(k=='src'){o.iw=0;o.cw=0}if(k=='logo')S.brand.liw=0;
+ await measureAll();
+ if(first&&o.iw>0){const pg=SZ(S.pages[cur]);let w=Math.min(o.w,pg.w*.7),h=w*o.ih/o.iw;if(h>pg.h*.7){h=pg.h*.7;w=h*o.iw/o.ih}Object.assign(o,{w:r1(w),h:r1(h)})}
+ if(k=='logo'&&S.brand.liw>0)[...S.pages.flatMap(p=>p.els),...S.master].filter(e=>e.t=='logo').forEach(e=>{const t=Math.min(e.w/S.brand.liw,e.h/S.brand.lih),w=S.brand.liw*t,h=S.brand.lih*t;e.x=r1(e.x+(e.w-w)/2);e.y=r1(e.y+(e.h-h)/2);e.w=r1(w);e.h=r1(h);e.cw=0});
+ draw();panel()}
 function addProd(){const p={id:uid(),name:'New product',cat:'',desc:'',variants:'',imgs:[],imgScale:100};S.products.push(p);selP=p.id;panel();draw()}
 function delProd(){S.products=S.products.filter(p=>p.id!=selP);S.pages.forEach(p=>p.ids&&(p.ids=p.ids.filter(i=>i!=selP)));selP=null;panel();draw()}
 async function imp(){const r=await api.sheet();if(!r)return;
@@ -242,10 +275,11 @@ async function imp(){const r=await api.sheet();if(!r)return;
   S.products.push({id:uid(),name:g('name'),cat:g('category'),desc:g('description'),variants:g('variants').replace(/\s*[|;]\s*/g,'\n'),imgs:[],imgScale:100})});panel();draw()}
 async function pdf(){await measureAll();$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
  $('#print').innerHTML=S.pages.filter(p=>!isT(p)).map(p=>pageHTML(p)).join('');const r=await api.pdf();if(r)alert('PDF saved:\n'+r)}
-async function openP(){const j=await api.open();if(j){S=JSON.parse(j);mig();cur=0;sel=null;cropId=null;lastSize={...S.size};await measureAll();panel();draw()}}
-const saveP=()=>api.saveAs(JSON.stringify(S));
+async function openP(){const j=await api.open();if(j){load(j);mig();cur=0;sel=null;cropId=null;lastSize={...S.size};await measureAll();H=[];hi=-1;commit();panel();draw()}}
+const saveP=()=>api.saveAs(pack());
 
 document.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;let v=e.target.value;
+ if(k=='el.w'&&selEl()&&selEl().t=='text')selEl().hug=0;
  if(k=='el.r')['r1','r2','r3','r4'].forEach(c=>delete selEl()[c]);
  if(/^el\.r[1-4]$/.test(k)&&v===''){delete selEl()[k.slice(3)];draw();return}
  if(e.target.type=='checkbox')v=e.target.checked?1:0;else if(['number','range'].includes(e.target.type)||e.target.dataset.num)v=+v;
@@ -259,9 +293,13 @@ cvs.addEventListener('mousedown',ev=>{
  const hd=ev.target.dataset&&ev.target.dataset.h,el=ev.target.closest&&ev.target.closest('[data-id]'),o=hd?selEl():el&&findEl(el.dataset.id);
  if(!o||(!hd&&o.lk)){sel=null;cropId=null;panel();draw();return}
  if(sel!=o.id)cropId=null;sel=o.id;ev.preventDefault();
- const sx=ev.clientX,sy=ev.clientY,O={x:o.x,y:o.y,w:o.w,h:o.h},isImg=o.t=='image'||o.t=='logo',c0=isImg?crop(o):null,pg=SZ(S.pages[cur]);
+ const now=Date.now();if(!hd&&(o.t=='image'||o.t=='logo')&&lastClk.id==o.id&&now-lastClk.t<450){cropId=o.id;lastClk={id:0,t:0}}else lastClk={id:o.id,t:now};
+ const sx=ev.clientX,sy=ev.clientY,O={x:o.x,y:o.y,w:o.w,h:o.h},isImg=o.t=='image'||o.t=='logo',isTx=o.t=='text'||o.t=='pf',sz0=o.size,c0=isImg?crop(o):null,pg=SZ(S.pages[cur]);
  const mvf=m=>{const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);
-  if(hd){let x=O.x,y=O.y,w=O.w,h=O.h;
+  if(hd&&isTx){
+   if(hd.length==2){const k=Math.max(.2,(O.w+(hd.includes('w')?-dx:dx))/O.w);o.size=Math.max(4,r1(sz0*k));o.x=r1(hd.includes('w')?O.x+O.w-O.w*k:O.x);o.y=r1(hd.includes('n')?O.y+O.h-O.h*k:O.y);if(!o.hug)o.w=r1(O.w*k)}
+   else{o.hug=0;const w=Math.max(8,O.w+(hd=='e'?dx:-dx));o.w=r1(w);if(hd=='w')o.x=r1(O.x+O.w-w)}}
+  else if(hd){let x=O.x,y=O.y,w=O.w,h=O.h;
    if(hd.includes('e'))w=O.w+dx;if(hd.includes('s'))h=O.h+dy;if(hd.includes('w')){w=O.w-dx;x=O.x+dx}if(hd.includes('n')){h=O.h-dy;y=O.y+dy}
    if(w<3){if(hd.includes('w'))x-=3-w;w=3}if(h<3){if(hd.includes('n'))y-=3-h;h=3}
    const uni=isImg&&hd.length==2&&o.lock&&cropId!=o.id;
@@ -274,13 +312,29 @@ cvs.addEventListener('mousedown',ev=>{
  const up=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',up);panel()};
  addEventListener('mousemove',mvf);addEventListener('mouseup',up);panel();draw()});
 cvs.addEventListener('dblclick',ev=>{const el=ev.target.closest('[data-id]'),o=el&&findEl(el.dataset.id);if(o&&!o.lk&&(o.t=='image'||o.t=='logo')){sel=o.id;cropId=o.id;panel();draw()}});
-addEventListener('keydown',ev=>{if(/INPUT|TEXTAREA|SELECT/.test(ev.target.tagName))return;const o=selEl();
+addEventListener('keydown',ev=>{const tg=ev.target.tagName,ed=tg=='TEXTAREA'||(tg=='INPUT'&&/text|number|search/.test(ev.target.type||'text'));
+ if(fpK!==null&&ev.key=='Escape'){fpClose(0);return}
+ if((ev.ctrlKey||ev.metaKey)&&!ed){const k=ev.key.toLowerCase();if(k=='z'){ev.shiftKey?redo():undo();ev.preventDefault();return}if(k=='y'){redo();ev.preventDefault();return}}
+ if(/INPUT|TEXTAREA|SELECT/.test(tg))return;const o=selEl();
  if(ev.key=='Escape'){cropId=null;sel=null;panel();draw();return}
  if(!o)return;if(ev.key=='Delete'){delEl();return}
+ if((ev.key=='c'||ev.key=='C')&&(o.t=='image'||o.t=='logo')&&!ev.ctrlKey){cropOn();return}
  const d=ev.shiftKey?5:.5,m={ArrowLeft:['x',-d],ArrowRight:['x',d],ArrowUp:['y',-d],ArrowDown:['y',d]}[ev.key];
  if(m&&!o.lk){o[m[0]]=r1(o[m[0]]+m[1]);draw();panel();ev.preventDefault()}});
+function fpRender(q){q=(q||'').toLowerCase();fpC=fpL.filter(f=>fname(f).toLowerCase().includes(q));fpI=-1;$('#fpv').innerHTML=fpC.map((f,i)=>`<div class="fi ${f==fpO?'cur':''}" data-i="${i}" style="font-family:${fnt(f)}">${esc(fname(f))}</div>`).join('')}
+function fpOpen(k,sp){fpK=k;fpO=get(k);fpL=[...(sp?['@h','@b']:[]),...fonts];$('#fpl').style.display='flex';$('#fps').value='';fpRender('');$('#fps').focus();const c=$('#fpv').querySelector('.cur');if(c)c.scrollIntoView({block:'center'})}
+function fpClose(ok){if(fpK===null)return;if(!ok)set(fpK,fpO);fpK=null;$('#fpl').style.display='none';panel();draw()}
+function fpHi(i,ns){[...$('#fpv').children].forEach((c,j)=>c.classList.toggle('on',j==i));const c=$('#fpv').children[i];if(c&&!ns)c.scrollIntoView({block:'nearest'});set(fpK,fpC[i]);draw()}
+function fpKey(e){if(e.key=='Escape'){fpClose(0);return}if(e.key=='Enter'){if(fpC[fpI]!==undefined){set(fpK,fpC[fpI]);fpClose(1)}return}
+ if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();fpI=e.key=='ArrowDown'?Math.min(fpC.length-1,fpI+1):Math.max(0,fpI-1);if(fpC.length)fpHi(fpI)}}
+let mx=0,my=0;
+$('#fpv').addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+$('#fpv').addEventListener('mouseover',e=>{const n=e.target.closest('.fi');if(n&&+n.dataset.i!==fpI){fpI=+n.dataset.i;fpHi(fpI,1)}});
+$('#fpv').addEventListener('scroll',()=>{const n=document.elementFromPoint(mx,my),f=n&&n.closest&&n.closest('.fi');if(f&&+f.dataset.i!==fpI){fpI=+f.dataset.i;fpHi(fpI,1)}});
+$('#fpv').addEventListener('click',e=>{const n=e.target.closest('.fi');if(n){set(fpK,fpC[+n.dataset.i]);fpClose(1)}});
+document.addEventListener('mousedown',e=>{if(fpK!==null&&!e.target.closest('#fpl')&&!e.target.closest('.fpb'))fpClose(0)});
 addEventListener('resize',draw);
 (async()=>{try{fonts=(await api.fonts()).sort()}catch{}
- const j=await api.load();if(j)S=JSON.parse(j);else S.pages=defaults();
- mig();lastSize={...S.size};await measureAll();panel();draw()})();
+ const j=await api.load();if(j)load(j);else S.pages=defaults();
+ mig();lastSize={...S.size};await measureAll();commit();panel();draw()})();
 </script></body></html>
