@@ -1,36 +1,53 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Catalogue Maker</title>
 <style>
+:root{--ac:#2563eb;--bg:#e9ecf1;--pn:#fff;--bd:#dde1e7;--tx:#1f2937;--mu:#6b7280}
 *{box-sizing:border-box}
-body{margin:0;font:13px system-ui,sans-serif;display:grid;grid-template-columns:270px 1fr 250px;grid-template-rows:42px 1fr;height:100vh;background:#d8d6d0;color:#222}
-header{grid-column:1/4;background:#1f2937;display:flex;gap:6px;align-items:center;padding:0 10px;color:#fff}
-header b{margin-right:auto}
-button{padding:5px 9px;border:1px solid #bbb;border-radius:5px;background:#fff;cursor:pointer}
-header button{background:#374151;color:#fff;border-color:#4b5563}
-.side{background:#f7f6f3;overflow:auto;padding:10px}
+body{margin:0;font:13px/1.4 "Segoe UI",system-ui,sans-serif;display:grid;grid-template-columns:272px 1fr 280px;grid-template-rows:48px 1fr;height:100vh;background:var(--bg);color:var(--tx)}
+header{grid-column:1/4;background:#111827;display:flex;gap:8px;align-items:center;padding:0 14px;color:#fff}
+header b{margin-right:auto;font-weight:600;letter-spacing:.3px}
+button{padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:var(--tx);cursor:pointer;font:inherit}
+button:hover{border-color:#9ca3af}
+header button{background:#1f2937;border-color:#374151;color:#e5e7eb}
+header button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.side{background:var(--pn);overflow:auto;padding:12px;border-right:1px solid var(--bd)}
+#R{border-right:0;border-left:1px solid var(--bd)}
+.side b{display:block;margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--mu)}
+.hint{color:var(--mu);font-size:12px;margin:6px 0}
 #stage{overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
-#canvas{box-shadow:0 2px 14px #0005}
-label{display:block;margin:6px 0 2px;font-size:11px;color:#555}
-input:not([type=checkbox]):not([type=color]),textarea,select{width:100%;padding:4px;border:1px solid #bbb;border-radius:4px;font:inherit}
+#canvas{position:relative;background:#fff;box-shadow:0 4px 24px #0003}
+label{display:block;margin:8px 0 3px;font-size:11px;color:var(--mu)}
+input:not([type=checkbox]):not([type=color]),textarea,select{width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;font:inherit;background:#fff}
 textarea{height:64px}
-.tabs{display:flex;gap:4px;margin-bottom:8px}
-.tabs button.on,.row.on{background:#1f2937;color:#fff}
-.row{padding:6px;border-radius:4px;cursor:pointer;border:1px solid #ddd;margin:3px 0;background:#fff}
-.sw{width:22px;height:22px;padding:0;border-radius:50%}.sm button{padding:3px 6px;font-size:12px}
+.tabs{display:flex;gap:4px;margin-bottom:10px}
+.tabs button{flex:1;padding:6px 2px}
+.tabs button.on,.row.on{background:#1f2937;color:#fff;border-color:#1f2937}
+.row{padding:7px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--bd);margin:4px 0;background:#fff}
+.ly{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.sm button{padding:3px 7px;font-size:12px;margin:2px 2px 0 0}
+.cp{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.sw{width:22px;height:22px;padding:0;border-radius:50%;border:1px solid #cbd5e1}
+.sw.on{outline:2px solid var(--ac);outline-offset:1px}
+.nof{background:linear-gradient(135deg,#fff 45%,#e11d48 46%,#e11d48 54%,#fff 55%)}
+.cp input[type=color]{width:30px;height:26px;padding:0;border:1px solid var(--bd);border-radius:6px;background:#fff}
+.cp input.hex{width:86px}
 .pg{position:relative;overflow:hidden;break-after:page}
 .pg:last-child{break-after:auto}
 .el{position:absolute;box-sizing:border-box;overflow:hidden}
-.el img{pointer-events:none}
+.el img{position:absolute;max-width:none;pointer-events:none}
 #canvas .el[data-id]{cursor:move}
-.sel{outline:.4mm dashed #2563eb}
-.hd{position:absolute;right:0;bottom:0;width:3mm;height:3mm;background:#2563eb;cursor:nwse-resize}
+.ov{position:absolute;pointer-events:none;outline:calc(var(--hs)/6) solid #2563eb}
+.dim{position:absolute;opacity:.4;max-width:none}
+.hd{position:absolute;pointer-events:auto;width:var(--hs);height:var(--hs);margin:calc(var(--hs)/-2) 0 0 calc(var(--hs)/-2);background:#fff;border:calc(var(--hs)/8) solid #2563eb;border-radius:20%}
+.hd.nw{left:0;top:0;cursor:nwse-resize}.hd.n{left:50%;top:0;cursor:ns-resize}.hd.ne{left:100%;top:0;cursor:nesw-resize}.hd.e{left:100%;top:50%;cursor:ew-resize}
+.hd.se{left:100%;top:100%;cursor:nwse-resize}.hd.s{left:50%;top:100%;cursor:ns-resize}.hd.sw{left:0;top:100%;cursor:nesw-resize}.hd.w{left:0;top:50%;cursor:ew-resize}
 .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0001;color:#888;font:10pt sans-serif}
 #print{display:none}
 @media print{body{display:block;height:auto;background:none}.ui{display:none!important}#print{display:block}.ph{display:none}}
 </style></head><body>
 <header class="ui"><b>Catalogue Maker</b>
 <button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
-<button onclick="pdf()">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
+<button class="pri" onclick="pdf()">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
 <aside class="side ui" id="L"></aside>
 <main id="stage" class="ui"><div id="canvas"></div></main>
 <aside class="side ui" id="R"></aside>
@@ -38,7 +55,7 @@ textarea{height:64px}
 <script>
 const PX=3.7795,$=s=>document.querySelector(s);
 let S={brand:{pal:['#7a1f1f','#e8a317','#fff8ec'],font:'Arial',bodyFont:'Arial',logo:'',phone:'+91-0000000000',email:'support@example.com',web:'www.example.com',fssai:'',insta:''},size:{w:210,h:297},master:[],products:[],pages:[]};
-let cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
+let cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
 const uid=()=>Math.random().toString(36).slice(2,8),r1=v=>Math.round(v*10)/10;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const col=c=>c&&c[0]=='@'?S.brand.pal[+c.slice(1)-1]||'#000':c||'#000';
@@ -53,8 +70,16 @@ const selEl=()=>findEl(sel),selProd=()=>S.products.find(p=>p.id==selP);
 const root=()=>({brand:S.brand,pal:S.brand.pal,size:S.size,el:selEl()||{},page:S.pages[cur],prod:selProd()||{}});
 const get=k=>{const[a,b]=k.split('.');return root()[a][b]};
 const set=(k,v)=>{const[a,b]=k.split('.');root()[a][b]=v};
+const SZ=p=>p.type=='card'?{w:p.w,h:p.h}:S.size;
+const cardDef=()=>{const E=o=>({id:uid(),...o});return{name:'Product card template',type:'card',w:90,h:120,bg:'transparent',cr:3,els:[
+ E({t:'rect',x:0,y:0,w:90,h:120,bg:'#ffffff',bc:'@2',bw:.4,r:3}),E({t:'pimg',x:4,y:4,w:82,h:58,fit:'contain',r:2}),
+ E({t:'pf',f:'name',x:4,y:65,w:82,h:10,size:14,color:'@1',bold:1,align:'left',font:'@h'}),
+ E({t:'pf',f:'cat',x:4,y:75,w:82,h:6,size:8,color:'#666666',bold:1,align:'left',font:'@b'}),
+ E({t:'pf',f:'desc',x:4,y:82,w:82,h:16,size:8,color:'#333333',align:'left',font:'@b'}),
+ E({t:'pf',f:'variants',x:4,y:99,w:82,h:17,size:8,color:'#333333',align:'left',font:'@b'})]}};
 function mig(){const b=S.brand;if(!b.pal)b.pal=[b.c1||'#7a1f1f',b.c2||'#e8a317',b.c3||'#fff8ec'];S.master=S.master||[];
- S.pages.forEach(p=>{if(p.type=='prod'&&!p.cols){const n=+p.layout||2,l=S.size.w>S.size.h;p.cols=n==1?1:n==2?(l?2:1):2;p.rows=n==1?1:n==2?(l?1:2):2}})}
+ S.pages.forEach(p=>{if(p.type=='prod'&&!p.cols){const n=+p.layout||2,l=S.size.w>S.size.h;p.cols=n==1?1:n==2?(l?2:1):2;p.rows=n==1?1:n==2?(l?1:2):2}});
+ if(!S.pages.some(p=>p.type=='card'))S.pages.push(cardDef())}
 
 function defaults(){const E=o=>({id:uid(),...o});return[
 {name:'Cover',type:'free',bg:'@1',els:[E({t:'rect',x:0,y:200,w:210,h:97,bg:'@2'}),E({t:'logo',x:70,y:40,w:70,h:40,lock:1}),
@@ -69,13 +94,26 @@ function defaults(){const E=o=>({id:uid(),...o});return[
 {name:'Contact',type:'free',bg:'@1',els:[E({t:'text',x:15,y:80,w:180,h:25,text:'Thank You',size:36,color:'@3',bold:1,align:'center',font:'@h'}),
  E({t:'text',x:15,y:125,w:180,h:60,text:'Phone: {phone}\nEmail: {email}\nWeb: {web}\nFSSAI: {fssai}\nInstagram: {insta}',size:14,color:'@3',align:'center',font:'@b'})]}]}
 
-function elHTML(e){const lg=e.t=='logo',im=e.t=='image'||lg;
- let st=`left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;border-radius:${e.r||0}mm;${e.t!='text'&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:''}`,inner='';
+const SAMPLE={name:'Product name',cat:'Category',desc:'Short product description goes here.',variants:'100 g - Rs 120\n250 g - Rs 280'};
+function crop(e){const lg=e.t=='logo',iw=lg?S.brand.liw:e.iw,ih=lg?S.brand.lih:e.ih;
+ if(e.cw)return{cx:e.cx,cy:e.cy,cw:e.cw,ch:e.ch};
+ if(!(iw>0&&ih>0))return{cx:0,cy:0,cw:1,ch:1};
+ const s=(lg?Math.min:Math.max)(e.w/iw,e.h/ih),cw=iw*s/e.w,ch=ih*s/e.h;return{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch}}
+function elHTML(e,q){if(e.hid)return'';const lg=e.t=='logo',im=e.t=='image'||lg,tx=e.t=='text'||e.t=='pf';
+ let rad=e.r||0,st='',inner='';
  if(e.t=='rect')st+=`background:${col(e.bg)};`;
- if(e.t=='text'){st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};`;inner=esc(tk(e.text)).replace(/\n/g,'<br>')}
- if(im){const s=lg?S.brand.logo:e.src,px=e.px??50,py=e.py??50;
-  inner=s?`<img src="${U(s)}" style="width:100%;height:100%;object-fit:${e.fit||(lg?'contain':'cover')};object-position:${px}% ${py}%;transform:scale(${(e.zoom||100)/100});transform-origin:${px}% ${py}%">`:`<div class="ph">${lg?'Logo':'Image'}</div>`}
+ if(tx){const v=e.t=='pf'?String((q||SAMPLE)[e.f]??''):tk(e.text);st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};`;inner=esc(v).replace(/\n/g,'<br>')}
+ if(im){const s=lg?S.brand.logo:e.src;if(s){const c=crop(e);inner=`<img src="${U(s)}" style="left:${c.cx*100}%;top:${c.cy*100}%;width:${c.cw*100}%;height:${c.ch*100}%">`}else inner=`<div class="ph">${lg?'Logo':'Image'}</div>`}
+ if(e.t=='pimg'){if(q&&q.img){dims(q);const sc=(q.imgScale||100)/100;
+   if(e.fit=='cover'||!(q.iw>0)){inner=`<img src="${U(q.img)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
+   else{const a=q.iw/q.ih;let w=e.w,h=w/a;if(h>e.h){h=e.h;w=h*a}w*=sc;h*=sc;inner=`<img src="${U(q.img)}" style="left:${r1((e.w-w)/2)}mm;top:${r1((e.h-h)/2)}mm;width:${r1(w)}mm;height:${r1(h)}mm;border-radius:${rad}mm">`;rad=0}}
+  else inner='<div class="ph">Product image</div>'}
+ st=`left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;border-radius:${rad}mm;`+(!tx&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:'')+st;
  return `<div class="el" data-id="${e.id}" style="${st}">${inner}</div>`}
+function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;let h=`<div class="ov" style="left:${o.x}mm;top:${o.y}mm;width:${o.w}mm;height:${o.h}mm">`;
+ if(cm){const c=crop(o),ix=c.cx*o.w,iy=c.cy*o.h,iw=c.cw*o.w,ih=c.ch*o.h,src=o.t=='logo'?S.brand.logo:o.src;
+  h+=`<img class="dim" src="${U(src)}" style="left:${ix}mm;top:${iy}mm;width:${iw}mm;height:${ih}mm;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${-ix}mm ${-iy}mm,${o.w-ix}mm ${-iy}mm,${o.w-ix}mm ${o.h-iy}mm,${-ix}mm ${o.h-iy}mm,${-ix}mm ${-iy}mm)">`}
+ return h+['nw','n','ne','e','se','s','sw','w'].map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')+'</div>'}
 
 function grid(p){const W=S.size.w,H=S.size.h,m=10,top=26,cols=Math.max(1,+p.cols||1),rows=Math.max(1,+p.rows||1);
  return{W,H,m,top,cols,rows,gw:(W-2*m)/cols,gh:(H-top-14)/rows}}
@@ -85,95 +123,102 @@ function prodHF(p){const{W,H,m}=grid(p);
  +`<div class="el" style="left:${m}mm;top:${H-9}mm;width:${W-2*m}mm;height:6mm;font:9pt ${fnt('@b')};color:${col('@1')};text-align:center">${esc(tk('{web}  |  {phone}  |  {email}'))}</div>`}
 const MEAS=new Set();
 function dims(q){if(q.img&&!(q.iw>0)&&!MEAS.has(q.id)){MEAS.add(q.id);const i=new Image();i.onload=()=>{q.iw=i.naturalWidth;q.ih=i.naturalHeight;draw()};i.src=U(q.img)}}
-const measureAll=()=>Promise.all(S.products.filter(q=>q.img&&!(q.iw>0)).map(q=>new Promise(res=>{const i=new Image();i.onload=()=>{q.iw=i.naturalWidth;q.ih=i.naturalHeight;res()};i.onerror=res;i.src=U(q.img)})));
-function prodCards(p){const{m,top,cols,rows,gw,gh}=grid(p),n=cols*rows,fs=Math.round(Math.max(7,Math.min(18,gw/8,gh/9))*2)/2,sm=Math.max(6,fs-3);let h='';
- const bw=gw-4-6,bh=r1((gh-4-6)*((+p.imgFrac||55)/100));
- (p.ids||[]).map(id=>S.products.find(x=>x.id==id)).filter(Boolean).slice(0,n).forEach((q,i)=>{dims(q);
-  const sc=(q.imgScale||100)/100,r=q.imgR>0?q.imgR:(+p.imgR||0);let ist='width:100%;height:100%;object-fit:contain';
-  if(q.iw>0&&q.ih>0){const a=q.iw/q.ih;let w=bw,hh=w/a;if(hh>bh){hh=bh;w=hh*a}ist=`width:${r1(w*sc)}mm;height:${r1(hh*sc)}mm;object-fit:cover;border-radius:${r}mm`}
-  h+=`<div class="el" style="left:${m+(i%cols)*gw}mm;top:${top+Math.floor(i/cols)*gh}mm;width:${gw-4}mm;height:${gh-4}mm;background:#fff;border:.4mm solid ${col('@2')};border-radius:3mm;padding:3mm;display:flex;flex-direction:column;gap:1.5mm;font-family:${fnt('@b')}">
-  <div style="height:${bh}mm;flex:none;display:flex;align-items:center;justify-content:center">${q.img?`<img src="${U(q.img)}" style="${ist}">`:''}</div>
-  <div style="flex:1;min-height:0;overflow:hidden">
-  <div style="font:700 ${fs}pt ${fnt('@h')};color:${col('@1')}">${esc(q.name)}</div>
-  <div style="font-size:${sm}pt;color:#666;font-weight:700">${esc(q.cat)}</div>
-  <div style="font-size:${sm}pt">${esc(q.desc)}</div>
-  <div style="font-size:${sm}pt;color:#333">${esc(q.variants).replace(/\n/g,'<br>')}</div></div></div>`});
+const allImgs=()=>[...S.products.filter(q=>q.img).map(q=>[q,q.img,'iw','ih']),...[...S.pages.flatMap(p=>p.els),...S.master].filter(e=>e.t=='image'&&e.src).map(e=>[e,e.src,'iw','ih']),...(S.brand.logo?[[S.brand,S.brand.logo,'liw','lih']]:[])];
+const measureAll=()=>Promise.all(allImgs().filter(([o,s,a])=>!(o[a]>0)).map(([o,s,a,b])=>new Promise(res=>{const i=new Image();i.onload=()=>{o[a]=i.naturalWidth;o[b]=i.naturalHeight;res()};i.onerror=res;i.src=U(s)})));
+function prodCards(p){const{m,top,cols,rows,gw,gh}=grid(p),n=cols*rows,T=S.pages.find(x=>x.type=='card'),cw=gw-4,ch=gh-4,s=Math.min(cw/T.w,ch/T.h),ox=(cw-T.w*s)/2,oy=(ch-T.h*s)/2;let h='';
+ (p.ids||[]).map(id=>S.products.find(x=>x.id==id)).filter(Boolean).slice(0,n).forEach((q,i)=>{
+  h+=`<div class="el" style="left:${r1(m+(i%cols)*gw+ox)}mm;top:${r1(top+Math.floor(i/cols)*gh+oy)}mm;width:${T.w}mm;height:${T.h}mm;transform:scale(${s});transform-origin:0 0;border-radius:${T.cr||0}mm;background:${col(T.bg)}${T.bgImg?`;background-image:url(${U(T.bgImg)});background-size:${T.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}">${T.els.map(e=>elHTML(e,q)).join('')}</div>`});
  return h}
 
-const pageHTML=p=>(CP=p,`<div class="pg" style="width:${S.size.w}mm;height:${S.size.h}mm;background:${col(p.bg)}${p.bgImg?`;background-image:url(${U(p.bgImg)});background-size:${p.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}">${p.type=='prod'&&!p.noHF?prodHF(p):''}${p.noMaster?'':S.master.map(elHTML).join('')}${p.type=='prod'?prodCards(p):''}${p.els.map(elHTML).join('')}</div>`);
-
-function draw(){const c=$('#stage'),W=S.size.w,H=S.size.h;
- Z=Math.max(.1,Math.min((c.clientWidth-40)/(W*PX),(c.clientHeight-40)/(H*PX)));
- const cv=$('#canvas');cv.style.zoom=Z;cv.innerHTML=pageHTML(S.pages[cur]);
- const s=cv.querySelector(`[data-id="${sel}"]`),e=selEl();
- if(s&&e){s.classList.add('sel');const o=(e.r||0)*.29;s.insertAdjacentHTML('beforeend',`<i class="hd" style="right:${o}mm;bottom:${o}mm"></i>`)}
+const pageHTML=p=>{CP=p;const z=SZ(p),cd=p.type=='card',q0=cd?(selProd()||S.products[0]||null):null;
+ return `<div class="pg" style="width:${z.w}mm;height:${z.h}mm;background:${col(p.bg)}${p.bgImg?`;background-image:url(${U(p.bgImg)});background-size:${p.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}${cd&&p.cr?`;border-radius:${p.cr}mm`:''}">${p.type=='prod'&&!p.noHF?prodHF(p):''}${p.noMaster||cd?'':S.master.map(e=>elHTML(e)).join('')}${p.type=='prod'?prodCards(p):''}${p.els.map(e=>elHTML(e,q0)).join('')}</div>`};
+function draw(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
+ Z=Math.max(.1,Math.min((c.clientWidth-60)/(z.w*PX),(c.clientHeight-60)/(z.h*PX)));
+ const cv=$('#canvas');cv.style.zoom=Z;cv.style.setProperty('--hs',(9/(Z*PX)).toFixed(2)+'mm');
+ cv.innerHTML=pageHTML(p)+overlay(selEl());
  clearTimeout(tm);tm=setTimeout(()=>api.save(JSON.stringify(S)),800)}
 
 const F=(l,k,t='text',x='')=>{const v=get(k)??'';return `<label>${l}${t=='textarea'?`<textarea data-k="${k}">${esc(v)}</textarea>`:`<input data-k="${k}" type="${t}" ${x} step="any" ${t=='checkbox'?(v?'checked':''):`value="${esc(v)}"`}>`}</label>`};
 const SEL=(l,k,o,num)=>`<label>${l}<select data-k="${k}" ${num?'data-num="1"':''}>${o.map(([v,n])=>`<option value="${esc(v)}" ${String(get(k))==String(v)?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`;
-const C=(l,k)=>`<label>${l}</label><div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${S.brand.pal.map((c,i)=>`<button class="sw" style="background:${c}" title="Colour ${i+1}" onclick="setK('${k}','@${i+1}')"></button>`).join('')}<input type="color" data-k="${k}" value="${col(get(k))}"></div>`;
+const C=(l,k)=>{const v=get(k),hx=col(v);return `<label>${l}</label><div class="cp">${S.brand.pal.map((c,i)=>`<button class="sw ${v=='@'+(i+1)?'on':''}" style="background:${c}" title="Brand colour ${i+1}" onclick="setK('${k}','@${i+1}')"></button>`).join('')}<button class="sw nof ${v=='transparent'?'on':''}" title="No colour" onclick="setK('${k}','transparent')"></button><input type="color" data-k="${k}" value="${/^#[0-9a-f]{6}$/i.test(hx)?hx:'#000000'}"><input class="hex" value="${esc(hx)}" onchange="hexK('${k}',this.value)"></div>`};
 const FO=()=>fonts.map(f=>[f,f]);
 
+const lab=e=>e.t=='text'?'Text: '+String(e.text).slice(0,14):e.t=='pf'?'Field: '+e.f:e.t=='pimg'?'Product image':e.t=='image'?'Image':e.t=='logo'?'Logo':'Box';
 function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';panel()">${n}</button>`;
- let h=`<div class="tabs">${T('pages','Pages')}${T('prods','Products')}${T('brand','Brand')}</div>`;
- if(tab=='pages')h+=S.pages.map((p,i)=>`<div class="row ${i==cur?'on':''}" onclick="go(${i})">${i+1}. ${esc(p.name)}</div>`).join('')
+ let h=`<div class="tabs">${T('pages','Pages')}${T('layers','Layers')}${T('prods','Products')}${T('brand','Brand')}</div>`;
+ if(tab=='pages')h+=S.pages.map((p,i)=>`<div class="row ${i==cur?'on':''}" onclick="go(${i})">${p.type=='card'?'&#9733; ':(i+1)+'. '}${esc(p.name)}</div>`).join('')
   +`<p><button onclick="addPg(0)">+ Free page</button> <button onclick="addPg(1)">+ Product page</button></p><p><button onclick="mv(-1)">Up</button> <button onclick="mv(1)">Down</button> <button onclick="delPg()">Delete page</button></p><b>Page size (mm)</b>`+F('Width','size.w','number')+F('Height','size.h','number');
+ if(tab=='layers'){const p=S.pages[cur],row=e=>`<div class="row ly ${e.id==sel?'on':''}" onclick="pick('${e.id}')"><span>${esc(lab(e))}</span><span class="sm"><button onclick="event.stopPropagation();lay('${e.id}',1)">&#9650;</button><button onclick="event.stopPropagation();lay('${e.id}',-1)">&#9660;</button><button onclick="event.stopPropagation();tg('${e.id}','hid')">${e.hid?'Show':'Hide'}</button><button onclick="event.stopPropagation();tg('${e.id}','lk')">${e.lk?'Unlock':'Lock'}</button></span></div>`;
+  h+=`<b>Layers on this page (top first)</b>`+([...p.els].reverse().map(row).join('')||'<p class="hint">No layers yet.</p>')+(p.type=='card'?'':`<b>Shared on every page</b>`+([...S.master].reverse().map(row).join('')||'<p class="hint">Nothing shared.</p>'))}
  if(tab=='prods'){const q=selProd();if(q&&!q.imgScale)q.imgScale=100;
   h+=`<button onclick="addProd()">+ Add product</button> <button onclick="imp()">Import Excel/CSV</button>`
-  +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel()">${esc(p.name||'(new)')}</div>`).join('')
-  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size on page (%)','prod.imgScale','range','min="20" max="100"')+F('Image corner radius (mm) - overrides page setting','prod.imgR','number','min="0"')+`<p><button onclick="img(selProd(),'img')">Choose image</button> <button onclick="delProd()">Delete</button></p>`:'<p>Excel/CSV columns: name, category, description, variants</p>')}
+  +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel();draw()">${esc(p.name||'(new)')}</div>`).join('')
+  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size inside its frame (%)','prod.imgScale','range','min="20" max="100"')+`<p><button onclick="img(selProd(),'img')">Choose image</button> <button onclick="delProd()">Delete</button></p>`:'<p class="hint">Excel/CSV columns: name, category, description, variants</p>')}
  if(tab=='brand')h+=`<p><button onclick="img(S.brand,'logo')">Choose logo</button></p>`
   +S.brand.pal.map((c,i)=>F('Colour '+(i+1),'pal.'+i,'color')+(i>2&&i==S.brand.pal.length-1?`<button onclick="S.brand.pal.pop();panel();draw()">Remove colour ${i+1}</button>`:'')).join('')
   +`<p><button onclick="S.brand.pal.push('#888888');panel();draw()">+ Add colour</button></p>`
   +SEL('Heading font','brand.font',FO())+SEL('Body font','brand.bodyFont',FO())+F('Phone','brand.phone')+F('Email','brand.email')+F('Website','brand.web')+F('FSSAI no.','brand.fssai')+F('Instagram','brand.insta')
-  +'<p>In any text, type {phone} {email} {web} {fssai} {insta} to insert these automatically. {title} inserts the page heading.</p>';
+  +'<p class="hint">In any text type {phone} {email} {web} {fssai} {insta}. {title} inserts the page heading.</p>';
  $('#L').innerHTML=h}
 
-function R(){const p=S.pages[cur],e=selEl();if(p.type=='prod'&&!p.imgFrac)p.imgFrac=55;
- let h='<b>Page</b>'+F('Name','page.name')+C('Background colour','page.bg')
- +`<p><button onclick="img(S.pages[cur],'bgImg')">Background image</button> <button onclick="S.pages[cur].bgImg='';draw()">Remove</button></p>`
- +SEL('Background image fit','page.bgFit',[['cover','Fill (crop)'],['contain','Fit inside'],['100% 100%','Stretch']])
- +F('Hide shared header/footer on this page','page.noMaster','checkbox');
- if(p.type=='prod')h+=F('Heading','page.title')+F('Columns','page.cols','number','min="1"')+F('Rows','page.rows','number','min="1"')+F('Hide built-in header/footer','page.noHF','checkbox')+(p.noHF?'':'<p><button onclick="convHF()">Edit header/footer (make editable)</button></p>')+F('Image area height (%)','page.imgFrac','range','min="20" max="80"')+F('Product image corner radius (mm)','page.imgR','number','min="0"')
+function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.id==cropId))cropId=null;
+ let h='<b>Page</b>'+F('Name','page.name');
+ if(cd)h+=F('Card width (mm)','page.w','number','min="20"')+F('Card height (mm)','page.h','number','min="20"')+F('Card corner radius (mm)','page.cr','number','min="0"')+'<p class="hint">This single card design is used for every product on every product page.</p><p><button onclick="resetCard()">Reset card design</button></p>';
+ h+=C('Background colour','page.bg')+`<p><button onclick="img(S.pages[cur],'bgImg')">Background image</button> <button onclick="S.pages[cur].bgImg='';draw()">Remove</button></p>`+SEL('Background image fit','page.bgFit',[['cover','Fill (crop)'],['contain','Fit inside'],['100% 100%','Stretch']]);
+ if(!cd)h+=F('Hide shared header/footer on this page','page.noMaster','checkbox');
+ if(p.type=='prod')h+=F('Heading','page.title')+F('Columns','page.cols','number','min="1"')+F('Rows','page.rows','number','min="1"')+F('Hide built-in header/footer','page.noHF','checkbox')+(p.noHF?'':'<p><button onclick="convHF()">Edit header/footer (make editable)</button></p>')
   +`<label>Products on this page (max ${(+p.cols||1)*(+p.rows||1)})</label>`+S.products.map(x=>`<div><input type="checkbox" ${(p.ids||[]).includes(x.id)?'checked':''} onchange="tog('${x.id}')"> ${esc(x.name)}</div>`).join('');
- h+=`<p><button onclick="addEl('text')">+ Text</button> <button onclick="addEl('image')">+ Image</button> <button onclick="addEl('rect')">+ Box</button></p>`;
- if(e){const im=e.t=='image'||e.t=='logo';if(im&&e.lock===undefined)e.lock=1;h+='<hr>';
-  if(e.t=='text')h+=F('Text','el.text','textarea')+F('Size (pt)','el.size','number')+SEL('Font','el.font',[['@h','Brand heading'],['@b','Brand body'],...FO()])+C('Colour','el.color')+F('Bold','el.bold','checkbox')+SEL('Text align','el.align',[['left','Left'],['center','Center'],['right','Right']]);
-  if(e.t=='rect')h+=C('Fill colour','el.bg')+'<p><button onclick="setK(\'el.bg\',\'transparent\')">No fill</button></p>';
+ h+=`<b>Add to page</b><div class="sm"><button onclick="addEl('text')">Text</button><button onclick="addEl('image')">Image</button><button onclick="addEl('rect')">Box</button>`
+  +(cd?`<button onclick="addEl('pimg')">Product image</button><button onclick="addEl('pf','name')">Name</button><button onclick="addEl('pf','cat')">Category</button><button onclick="addEl('pf','desc')">Description</button><button onclick="addEl('pf','variants')">Sizes &amp; prices</button>`:'')+'</div>';
+ if(e){const im=e.t=='image'||e.t=='logo',tx=e.t=='text'||e.t=='pf';h+=`<b>Selected: ${esc(lab(e))}</b>`;
+  if(e.t=='text')h+=F('Text','el.text','textarea');
+  if(e.t=='pf')h+=SEL('Product field','el.f',[['name','Name'],['cat','Category'],['desc','Description'],['variants','Sizes & prices']]);
+  if(tx)h+=F('Size (pt)','el.size','number')+SEL('Font','el.font',[['@h','Brand heading'],['@b','Brand body'],...FO()])+C('Colour','el.color')+F('Bold','el.bold','checkbox')+SEL('Text align','el.align',[['left','Left'],['center','Center'],['right','Right']]);
+  if(e.t=='rect')h+=C('Fill colour','el.bg');
   if(e.t=='image')h+=`<p><button onclick="img(selEl())">Choose image</button></p>`;
-  if(e.t=='logo')h+='<p>The logo comes from the Brand tab.</p>';
-  if(im)h+=SEL('Fit','el.fit',[['cover','Fill frame (crop)'],['contain','Show whole image']])+F('Crop zoom (%)','el.zoom','range','min="100" max="400"')+F('Crop left-right','el.px','range','min="0" max="100"')+F('Crop top-bottom','el.py','range','min="0" max="100"')+F('Lock ratio when resizing','el.lock','checkbox')+`<p><button onclick="matchRatio()">Match frame to image ratio</button></p>`;
-  if(e.t!='text')h+=F('Corner radius (mm)','el.r','number','min="0"')+C('Border colour','el.bc')+F('Border size (mm)','el.bw','number','min="0" step="0.5"');
-  h+=`<label>Align on page</label><div class="sm"><button onclick="al('l')">Left</button> <button onclick="al('c')">Centre</button> <button onclick="al('r')">Right</button> <button onclick="al('t')">Top</button> <button onclick="al('m')">Middle</button> <button onclick="al('b')">Bottom</button></div>`
-  +['x','y','w','h'].map(k=>F(k.toUpperCase()+' (mm)','el.'+k,'number')).join('')
-  +`<label><input type="checkbox" ${S.master.includes(e)?'checked':''} onchange="toggleAll(this.checked)"> Show on every page (header/footer)</label><p><button onclick="delEl()">Delete</button></p>`}
+  if(e.t=='logo')h+='<p class="hint">The logo comes from the Brand tab.</p>';
+  if(e.t=='pimg')h+=SEL('Image fit','el.fit',[['contain','Whole image'],['cover','Fill frame (crop)']])+'<p class="hint">Corner radius below rounds every product image. Per-product size is in the Products tab.</p>';
+  if(im)h+=`<b>Crop</b><div class="sm">${cropId==e.id?'<button onclick="cropDone()">Done</button>':'<button onclick="cropOn()">Crop with mouse</button>'}<button onclick="zoomImg(1.1)">Zoom +</button><button onclick="zoomImg(1/1.1)">Zoom -</button><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Whole image</button></div><p class="hint">Double-click an image to crop. Corner handles resize it proportionally, side handles crop.</p>`+F('Lock ratio on corner resize','el.lock','checkbox');
+  if(!tx)h+=F('Corner radius (mm)','el.r','number','min="0"');
+  if(e.t=='rect'||im)h+=C('Border colour','el.bc')+F('Border size (mm)','el.bw','number','min="0" step="0.5"');
+  h+=`<b>Arrange</b><div class="sm"><button onclick="zo('front')">Bring to front</button><button onclick="zo('fwd')">Forward</button><button onclick="zo('bwd')">Backward</button><button onclick="zo('back')">Send to back</button></div>`
+  +`<b>Align on page</b><div class="sm"><button onclick="al('l')">Left</button><button onclick="al('c')">Centre</button><button onclick="al('r')">Right</button><button onclick="al('t')">Top</button><button onclick="al('m')">Middle</button><button onclick="al('b')">Bottom</button></div>`
+  +`<b>Position and size (mm)</b>`+['x','y','w','h'].map(k=>F(k.toUpperCase(),'el.'+k,'number')).join('')+F('Locked (cannot be moved)','el.lk','checkbox')
+  +(cd?'':`<label><input type="checkbox" ${S.master.includes(e)?'checked':''} onchange="toggleAll(this.checked)"> Show on every page (header/footer)</label>`)+`<p><button onclick="delEl()">Delete</button></p>`}
  $('#R').innerHTML=h}
 const panel=()=>{L();R()};
 
-const go=i=>{cur=i;sel=null;panel();draw()};
+const go=i=>{cur=i;sel=null;cropId=null;panel();draw()};
 const setK=(k,v)=>{set(k,v);draw();panel()};
+const hexK=(k,v)=>{v=v.trim();if(/^#?[0-9a-f]{3,8}$/i.test(v))setK(k,v[0]=='#'?v:'#'+v)};
 const tog=id=>{const p=S.pages[cur];p.ids=p.ids||[];const i=p.ids.indexOf(id);i<0?p.ids.push(id):p.ids.splice(i,1);draw()};
-function addPg(prod){S.pages.splice(cur+1,0,prod?{name:'Products',type:'prod',title:'Our Products',cols:2,rows:2,ids:[],bg:'@3',els:[]}:{name:'Page',type:'free',bg:'@3',els:[]});go(cur+1)}
-const mv=d=>{const j=cur+d;if(j<0||j>=S.pages.length)return;[S.pages[cur],S.pages[j]]=[S.pages[j],S.pages[cur]];go(j)};
-const delPg=()=>{if(S.pages.length>1&&confirm('Delete this page?')){S.pages.splice(cur,1);go(Math.max(0,cur-1))}};
-function addEl(t){const e={id:uid(),t,x:20,y:20,w:t=='text'?100:60,h:t=='text'?15:40,...(t=='text'?{text:'New text',size:16,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;panel();draw()}
-const delEl=()=>{S.pages[cur].els=S.pages[cur].els.filter(e=>e.id!=sel);S.master=S.master.filter(e=>e.id!=sel);sel=null;panel();draw()};
-function toggleAll(on){const e=selEl(),p=S.pages[cur];if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
-function al(a){const e=selEl(),W=S.size.w,H=S.size.h;if(a=='l')e.x=0;if(a=='c')e.x=(W-e.w)/2;if(a=='r')e.x=W-e.w;if(a=='t')e.y=0;if(a=='m')e.y=(H-e.h)/2;if(a=='b')e.y=H-e.h;e.x=r1(e.x);e.y=r1(e.y);draw();panel()}
-function matchRatio(){const e=selEl(),s=e.t=='logo'?S.brand.logo:e.src;if(!s)return;const i=new Image();i.onload=()=>{e.h=r1(e.w*i.naturalHeight/i.naturalWidth);draw();panel()};i.src=U(s)}
-async function img(o,k='src'){const d=await api.img();if(d){o[k]=d;if(k=='img'){o.iw=0;MEAS.delete(o.id)}draw();panel()}}
-function convHF(){const p=S.pages[cur],W=S.size.w,H=S.size.h,E=o=>({id:uid(),...o});
- p.els.unshift(E({t:'rect',x:0,y:0,w:W,h:20,bg:'@1'}),E({t:'text',x:10,y:4,w:W-60,h:12,text:'{title}',size:20,color:'@3',bold:1,align:'left',font:'@h'}),E({t:'logo',x:W-40,y:3,w:30,h:14,lock:1}),E({t:'text',x:10,y:H-9,w:W-20,h:6,text:'{web}  |  {phone}  |  {email}',size:9,color:'@1',align:'center',font:'@b'}));
- p.noHF=1;panel();draw()}
-function addProd(){const p={id:uid(),name:'New product',cat:'',desc:'',variants:'',img:'',imgScale:100};S.products.push(p);selP=p.id;panel()}
+function addPg(prod){const ci=S.pages.findIndex(p=>p.type=='card'),at=Math.min(cur+1,ci);S.pages.splice(at,0,prod?{name:'Products',type:'prod',title:'Our Products',cols:2,rows:2,ids:[],bg:'@3',els:[]}:{name:'Page',type:'free',bg:'@3',els:[]});go(at)}
+const mv=d=>{const j=cur+d;if(j<0||j>=S.pages.length||S.pages[cur].type=='card'||S.pages[j].type=='card')return;[S.pages[cur],S.pages[j]]=[S.pages[j],S.pages[cur]];go(j)};
+const delPg=()=>{if(S.pages[cur].type=='card')return;if(S.pages.length>2&&confirm('Delete this page?')){S.pages.splice(cur,1);go(Math.max(0,cur-1))}};
+function resetCard(){if(!confirm('Reset the card design to the default?'))return;const i=S.pages.findIndex(p=>p.type=='card');S.pages[i]=cardDef();go(i)}
+function addEl(t,f){const tx=t=='text'||t=='pf',e={id:uid(),t,x:10,y:10,w:tx?60:50,h:tx?10:40,...(t=='text'?{text:'New text',size:16,color:'@1',font:'@b',align:'left'}:t=='pf'?{f,size:10,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:t=='pimg'?{fit:'contain',r:0}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;panel();draw()}
+const delEl=()=>{S.pages[cur].els=S.pages[cur].els.filter(e=>e.id!=sel);S.master=S.master.filter(e=>e.id!=sel);sel=null;cropId=null;panel();draw()};
+function toggleAll(on){const e=selEl(),p=S.pages[cur];if(!e)return;if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
+function al(a){const e=selEl(),z=SZ(S.pages[cur]);if(a=='l')e.x=0;if(a=='c')e.x=(z.w-e.w)/2;if(a=='r')e.x=z.w-e.w;if(a=='t')e.y=0;if(a=='m')e.y=(z.h-e.h)/2;if(a=='b')e.y=z.h-e.h;e.x=r1(e.x);e.y=r1(e.y);draw();panel()}
+function zo(m,id=sel){const e=findEl(id);if(!e)return;const a=S.master.includes(e)?S.master:S.pages[cur].els,i=a.indexOf(e);a.splice(i,1);a.splice(m=='front'?a.length:m=='back'?0:m=='fwd'?Math.min(a.length,i+1):Math.max(0,i-1),0,e);panel();draw()}
+const lay=(id,d)=>zo(d>0?'fwd':'bwd',id);
+const tg=(id,k)=>{const e=findEl(id);e[k]=e[k]?0:1;panel();draw()};
+const pick=id=>{sel=id;cropId=null;panel();draw()};
+const cropOn=()=>{cropId=sel;panel();draw()},cropDone=()=>{cropId=null;panel();draw()};
+function zoomImg(f){const o=selEl(),c=crop(o);Object.assign(o,{cx:.5-(.5-c.cx)*f,cy:.5-(.5-c.cy)*f,cw:c.cw*f,ch:c.ch*f});draw()}
+function fitImg(fill){const o=selEl(),lg=o.t=='logo',iw=lg?S.brand.liw:o.iw,ih=lg?S.brand.lih:o.ih;if(!(iw>0))return;const s=(fill?Math.max:Math.min)(o.w/iw,o.h/ih),cw=iw*s/o.w,ch=ih*s/o.h;Object.assign(o,{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch});draw()}
+async function img(o,k='src'){const d=await api.img();if(d){o[k]=d;if(k=='src'){o.iw=0;o.cw=0}if(k=='img'){o.iw=0;MEAS.delete(o.id)}if(k=='logo')S.brand.liw=0;await measureAll();draw();panel()}}
+function addProd(){const p={id:uid(),name:'New product',cat:'',desc:'',variants:'',img:'',imgScale:100};S.products.push(p);selP=p.id;panel();draw()}
 function delProd(){S.products=S.products.filter(p=>p.id!=selP);S.pages.forEach(p=>p.ids&&(p.ids=p.ids.filter(i=>i!=selP)));selP=null;panel();draw()}
 async function imp(){const r=await api.sheet();if(!r)return;
  r.forEach(o=>{const g=n=>{const k=Object.keys(o).find(x=>x.trim().toLowerCase()==n);return k?String(o[k]):''};
   S.products.push({id:uid(),name:g('name'),cat:g('category'),desc:g('description'),variants:g('variants').replace(/\s*[|;]\s*/g,'\n'),img:'',imgScale:100})});panel();draw()}
-
+function convHF(){const p=S.pages[cur],W=S.size.w,H=S.size.h,E=o=>({id:uid(),...o});
+ p.els.unshift(E({t:'rect',x:0,y:0,w:W,h:20,bg:'@1'}),E({t:'text',x:10,y:4,w:W-60,h:12,text:'{title}',size:20,color:'@3',bold:1,align:'left',font:'@h'}),E({t:'logo',x:W-40,y:3,w:30,h:14,lock:1}),E({t:'text',x:10,y:H-9,w:W-20,h:6,text:'{web}  |  {phone}  |  {email}',size:9,color:'@1',align:'center',font:'@b'}));
+ p.noHF=1;panel();draw()}
 async function pdf(){await measureAll();$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
- $('#print').innerHTML=S.pages.map(pageHTML).join('');const r=await api.pdf();if(r)alert('PDF saved:\n'+r)}
-async function openP(){const j=await api.open();if(j){S=JSON.parse(j);mig();cur=0;sel=null;lastSize={...S.size};panel();draw()}}
+ $('#print').innerHTML=S.pages.filter(p=>p.type!='card').map(p=>pageHTML(p)).join('');const r=await api.pdf();if(r)alert('PDF saved:\n'+r)}
+async function openP(){const j=await api.open();if(j){S=JSON.parse(j);mig();cur=0;sel=null;cropId=null;lastSize={...S.size};await measureAll();panel();draw()}}
 const saveP=()=>api.saveAs(JSON.stringify(S));
 
 document.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;let v=e.target.value;
@@ -181,16 +226,33 @@ document.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;le
  set(k,v);draw()});
 document.addEventListener('change',e=>{if(e.target.dataset.k?.startsWith('size.')){
  const a=S.size.w/lastSize.w,b=S.size.h/lastSize.h;
- [...S.pages.flatMap(p=>p.els),...S.master].forEach(x=>{x.x*=a;x.w*=a;x.y*=b;x.h*=b});lastSize={...S.size};draw()}});
-$('#canvas').addEventListener('mousedown',e=>{
- const el=e.target.closest('[data-id]'),o=el&&findEl(el.dataset.id);
- if(!o){sel=null;panel();draw();return}
- sel=o.id;const rs=e.target.className=='hd',sx=e.clientX,sy=e.clientY,ox=o.x,oy=o.y,ow=o.w,oh=o.h;
+ [...S.pages.filter(p=>p.type!='card').flatMap(p=>p.els),...S.master].forEach(x=>{x.x*=a;x.w*=a;x.y*=b;x.h*=b});lastSize={...S.size};draw()}});
+
+const cvs=$('#canvas');
+cvs.addEventListener('mousedown',ev=>{
+ const hd=ev.target.dataset&&ev.target.dataset.h,el=ev.target.closest&&ev.target.closest('[data-id]'),o=hd?selEl():el&&findEl(el.dataset.id);
+ if(!o||(!hd&&o.lk)){sel=null;cropId=null;panel();draw();return}
+ if(sel!=o.id)cropId=null;sel=o.id;ev.preventDefault();
+ const sx=ev.clientX,sy=ev.clientY,O={x:o.x,y:o.y,w:o.w,h:o.h},isImg=o.t=='image'||o.t=='logo',c0=isImg?crop(o):null,pg=SZ(S.pages[cur]);
  const mvf=m=>{const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);
-  if(rs){const nw=r1(Math.max(5,ow+dx));o.w=nw;o.h=(o.t=='image'||o.t=='logo')&&o.lock?r1(nw*oh/ow):r1(Math.max(3,oh+dy))}
-  else{o.x=r1(ox+dx);o.y=r1(oy+dy)}draw()};
+  if(hd){let x=O.x,y=O.y,w=O.w,h=O.h;
+   if(hd.includes('e'))w=O.w+dx;if(hd.includes('s'))h=O.h+dy;if(hd.includes('w')){w=O.w-dx;x=O.x+dx}if(hd.includes('n')){h=O.h-dy;y=O.y+dy}
+   if(w<3){if(hd.includes('w'))x-=3-w;w=3}if(h<3){if(hd.includes('n'))y-=3-h;h=3}
+   const uni=isImg&&hd.length==2&&o.lock&&cropId!=o.id;
+   if(uni){const k=Math.max(w/O.w,h/O.h);w=O.w*k;h=O.h*k;if(hd.includes('w'))x=O.x+O.w-w;if(hd.includes('n'))y=O.y+O.h-h}
+   Object.assign(o,{x:r1(x),y:r1(y),w:r1(w),h:r1(h)});
+   if(isImg&&!uni)Object.assign(o,{cx:(c0.cx*O.w-(o.x-O.x))/o.w,cy:(c0.cy*O.h-(o.y-O.y))/o.h,cw:c0.cw*O.w/o.w,ch:c0.ch*O.h/o.h})}
+  else if(cropId==o.id){let cx=c0.cx+dx/o.w,cy=c0.cy+dy/o.h;if(c0.cw>=1)cx=Math.min(0,Math.max(1-c0.cw,cx));if(c0.ch>=1)cy=Math.min(0,Math.max(1-c0.ch,cy));Object.assign(o,{cx,cy,cw:c0.cw,ch:c0.ch})}
+  else{let x=O.x+dx,y=O.y+dy;for(const t of[0,(pg.w-O.w)/2,pg.w-O.w])if(Math.abs(x-t)<1.2)x=t;for(const t of[0,(pg.h-O.h)/2,pg.h-O.h])if(Math.abs(y-t)<1.2)y=t;o.x=r1(x);o.y=r1(y)}
+  draw()};
  const up=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',up);panel()};
- addEventListener('mousemove',mvf);addEventListener('mouseup',up);panel();draw();e.preventDefault()});
+ addEventListener('mousemove',mvf);addEventListener('mouseup',up);panel();draw()});
+cvs.addEventListener('dblclick',ev=>{const el=ev.target.closest('[data-id]'),o=el&&findEl(el.dataset.id);if(o&&!o.lk&&(o.t=='image'||o.t=='logo')){sel=o.id;cropId=o.id;panel();draw()}});
+addEventListener('keydown',ev=>{if(/INPUT|TEXTAREA|SELECT/.test(ev.target.tagName))return;const o=selEl();
+ if(ev.key=='Escape'){cropId=null;sel=null;panel();draw();return}
+ if(!o)return;if(ev.key=='Delete'){delEl();return}
+ const d=ev.shiftKey?5:.5,m={ArrowLeft:['x',-d],ArrowRight:['x',d],ArrowUp:['y',-d],ArrowDown:['y',d]}[ev.key];
+ if(m&&!o.lk){o[m[0]]=r1(o[m[0]]+m[1]);draw();panel();ev.preventDefault()}});
 addEventListener('resize',draw);
 (async()=>{try{fonts=(await api.fonts()).sort()}catch{}
  const j=await api.load();if(j)S=JSON.parse(j);else S.pages=defaults();
