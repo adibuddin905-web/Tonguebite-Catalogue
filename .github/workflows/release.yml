@@ -1,7 +1,11 @@
 name: Release
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: release
+  cancel-in-progress: false
 jobs:
   win:
     runs-on: windows-latest
@@ -13,6 +17,8 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: npm run release
+      - name: Build and publish (version is set automatically)
+        shell: bash
+        run: npx electron-builder --win --publish always -c.extraMetadata.version=1.${{ github.run_number }}.0
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
