@@ -5,7 +5,7 @@ let win;
 const store = () => path.join(app.getPath('userData'), 'project.json');
 
 app.whenReady().then(() => {
-  win = new BrowserWindow({ width: 1440, height: 900, webPreferences: { preload: path.join(__dirname, 'preload.js') } });
+  win = new BrowserWindow({ width: 1440, height: 900, webPreferences: { preload: path.join(__dirname, 'preload.js'), spellcheck: false } });
   win.setMenuBarVisibility(false);
   win.loadFile('index.html');
 });
@@ -14,6 +14,9 @@ app.on('window-all-closed', () => app.quit());
 ipcMain.handle('fonts', async () => { try { return await require('font-list').getFonts({ disableQuoting: true }); } catch { return ['Arial']; } });
 ipcMain.handle('load', () => fs.existsSync(store()) ? fs.readFileSync(store(), 'utf8') : null);
 ipcMain.handle('save', (e, j) => fs.writeFileSync(store(), j));
+const imgFile = () => path.join(app.getPath('userData'), 'images.json');
+ipcMain.handle('saveImgs', (e, j) => fs.writeFileSync(imgFile(), j));
+ipcMain.handle('loadImgs', () => fs.existsSync(imgFile()) ? fs.readFileSync(imgFile(), 'utf8') : null);
 ipcMain.handle('img', async () => {
   const r = await dialog.showOpenDialog(win, { filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'svg'] }] });
   if (r.canceled) return null;
