@@ -51,6 +51,7 @@ textarea{height:64px}
 #fpl input{border:0;border-bottom:1px solid var(--bd);border-radius:0;padding:9px 10px;width:100%;font:inherit}
 #fpv{overflow:auto;flex:1}
 .fi{padding:7px 12px;font-size:17px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi{content-visibility:auto;contain-intrinsic-size:auto 34px}
 .fi.cur{border-left:3px solid var(--ac)}
 .fi.on,.fi:hover{background:#e8f0fe}
 #tb{position:fixed;display:none;gap:4px;background:#111827;padding:5px;border-radius:8px;z-index:20;box-shadow:0 4px 16px #0004}
@@ -59,7 +60,7 @@ textarea{height:64px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
 .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0001;color:#888;font:10pt sans-serif}
 #print{display:none}
-@media print{body{display:block;height:auto;background:none}.ui{display:none!important}#print{display:block}.ph,.bdg{display:none}}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}img{image-rendering:auto}body{display:block;height:auto;background:none}.ui{display:none!important}#print{display:block}.ph,.bdg{display:none}}
 </style></head><body>
 <header class="ui"><b>Catalogue Maker</b>
 <button onclick="undo()">Undo</button><button onclick="redo()">Redo</button><button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
@@ -73,7 +74,7 @@ textarea{height:64px}
 <script>
 const PX=3.7795,$=s=>document.querySelector(s);
 let S={brand:{pal:['#7a1f1f','#e8a317','#fff8ec'],font:'Arial',bodyFont:'Arial',logo:'',phone:'+91-0000000000',email:'support@example.com',web:'www.example.com',fssai:'',insta:''},size:{w:210,h:297},master:[],products:[],pages:[]};
-let ms=[],gapV=5,H=[],hi=-1,ct,IMG={},fpK=null,fpO=null,fpC=[],fpL=[],fpI=-1,lastClk={id:0,t:0},newTpl=null,nSlots=2,cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
+let imgDirty=false,PRINT=false,dq=0,ms=[],gapV=5,H=[],hi=-1,ct,IMG={},fpK=null,fpO=null,fpC=[],fpL=[],fpI=-1,lastClk={id:0,t:0},newTpl=null,nSlots=2,cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
 const uid=()=>Math.random().toString(36).slice(2,8),r1=v=>Math.round(v*10)/10;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const col=c=>c&&c[0]=='@'?S.brand.pal[+c.slice(1)-1]||'#000':c||'#000';
@@ -83,10 +84,13 @@ const tk=s=>(s||'').replace(/\{(\w+)\}/g,(m,k)=>k=='title'?(CP.title||CP.name||'
 /* images are kept at full original quality; blob URLs only make redraws fast */
 const UC=new Map();
 const U=s=>{if(!s||typeof s!='string')return s;const d=s.startsWith('i:')?(IMG[s]||''):s;if(d.slice(0,5)!='data:')return d||s;let u=UC.get(s);if(!u){const i=d.indexOf(','),bin=atob(d.slice(i+1)),a=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)a[j]=bin.charCodeAt(j);u=URL.createObjectURL(new Blob([a],{type:d.slice(5,d.indexOf(';'))}));UC.set(s,u)}return u};
-const reg=d=>{for(const k in IMG)if(IMG[k]===d)return k;const k='i:'+uid();IMG[k]=d;return k};
+const PV=new Map(),PQ=new Set();let pvT;
+function pvq(s,u){if(!PQ.has(s)){PQ.add(s);const i=new Image();i.onload=()=>{const m=Math.max(i.naturalWidth,i.naturalHeight);if(!(m>1600)){PV.set(s,u);return}const k=1600/m,c=document.createElement('canvas');c.width=Math.round(i.naturalWidth*k);c.height=Math.round(i.naturalHeight*k);c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(b=>{if(b){PV.set(s,URL.createObjectURL(b));clearTimeout(pvT);pvT=setTimeout(draw,80)}},'image/webp',.92)};i.src=u}return u}
+const UV=s=>{const u=U(s);return PRINT||!s||typeof s!='string'||!s.startsWith('i:')?u:(PV.get(s)||pvq(s,u))};
+const reg=d=>{for(const k in IMG)if(IMG[k]===d)return k;const k='i:'+uid();IMG[k]=d;imgDirty=true;return k};
 function compact(o){for(const k in o){const v=o[k];if(typeof v=='string'){if(v.startsWith('data:'))o[k]=reg(v)}else if(v&&typeof v=='object')compact(v)}}
 function pack(){const js=JSON.stringify(S),m={};(js.match(/i:[a-z0-9]+/g)||[]).forEach(k=>{if(IMG[k])m[k]=IMG[k]});return JSON.stringify({S,IMG:m})}
-function load(j){const o=JSON.parse(j);if(o&&o.S){S=o.S;Object.assign(IMG,o.IMG||{})}else S=o;compact(S)}
+function load(j){const o=JSON.parse(j);if(o&&o.S){S=o.S;Object.assign(IMG,o.IMG||{});imgDirty=true}else S=o;compact(S)}
 function commit(){if(fpK!==null)return;const j=JSON.stringify(S);if(H[hi]===j)return;H=H.slice(0,hi+1);H.push(j);if(H.length>80)H.shift();hi=H.length-1}
 function restore(){S=JSON.parse(H[hi]);mig();cur=Math.min(cur,S.pages.length-1);cropId=null;ms=[];lastSize={...S.size};panel();draw()}
 function undo(){clearTimeout(ct);commit();if(hi>0){hi--;restore()}}
@@ -140,17 +144,17 @@ function elHTML(e,q,ro){if(e.hid)return'';const lg=e.t=='logo',im=e.t=='image'||
  const rs=[e.r1,e.r2,e.r3,e.r4].map(v=>(v??e.r??0)+'mm').join(' ');let elr=rs,st='',inner='';
  if(e.t=='rect')st+=`background:${col(e.bg)};`;
  if(tx){const v=e.t=='pf'?String((q||SAMPLE)[e.f]??''):tk(e.text);st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};${e.t=='text'&&e.hug?'white-space:pre;':''}`;inner=esc(v).replace(/\n/g,'<br>')}
- if(im){const s=lg?S.brand.logo:e.src;if(s){const c=crop(e);inner=`<img src="${U(s)}" style="left:${c.cx*100}%;top:${c.cy*100}%;width:${c.cw*100}%;height:${c.ch*100}%">`}else inner=`<div class="ph">${lg?'Logo':'Image'}</div>`}
+ if(im){const s=lg?S.brand.logo:e.src;if(s){const c=crop(e);inner=`<img src="${UV(s)}" style="left:${c.cx*100}%;top:${c.cy*100}%;width:${c.cw*100}%;height:${c.ch*100}%">`}else inner=`<div class="ph">${lg?'Logo':'Image'}</div>`}
  if(e.t=='pimg'){const m=q&&q.imgs&&q.imgs[(e.idx||1)-1];
   if(m&&m.s){dims(m);const sc=(q.imgScale||100)/100;
-   if(e.fit=='cover'||!(m.iw>0)){inner=`<img src="${U(m.s)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
-   else{const a=m.iw/m.ih;let w=e.w,h=w/a;if(h>e.h){h=e.h;w=h*a}w*=sc;h*=sc;inner=`<img src="${U(m.s)}" style="left:${r1((e.w-w)/2)}mm;top:${r1((e.h-h)/2)}mm;width:${r1(w)}mm;height:${r1(h)}mm;border-radius:${rs}">`;elr='0mm'}}
+   if(e.fit=='cover'||!(m.iw>0)){inner=`<img src="${UV(m.s)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
+   else{const a=m.iw/m.ih;let w=e.w,h=w/a;if(h>e.h){h=e.h;w=h*a}w*=sc;h*=sc;inner=`<img src="${UV(m.s)}" style="left:${r1((e.w-w)/2)}mm;top:${r1((e.h-h)/2)}mm;width:${r1(w)}mm;height:${r1(h)}mm;border-radius:${rs}">`;elr='0mm'}}
   else inner=`<div class="ph">Product image ${e.idx||1}</div>`}
  st=`left:${e.x}mm;top:${e.y}mm;width:${tx&&e.t=='text'&&e.hug?'max-content':e.w+'mm'};height:${tx?'auto':e.h+'mm'};border-radius:${elr};`+(!tx&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:'')+st;
  return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="${st}">${inner}</div>`}
 function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;let h=`<div class="ov${cm?' crop':''}" style="left:${o.x}mm;top:${o.y}mm;width:${o.w}mm;height:${o.h}mm">`;
  if(cm){const c=crop(o),ix=c.cx*o.w,iy=c.cy*o.h,iw=c.cw*o.w,ih=c.ch*o.h,src=o.t=='logo'?S.brand.logo:o.src;
-  h+=`<img class="dim" src="${U(src)}" style="left:${ix}mm;top:${iy}mm;width:${iw}mm;height:${ih}mm;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${-ix}mm ${-iy}mm,${o.w-ix}mm ${-iy}mm,${o.w-ix}mm ${o.h-iy}mm,${-ix}mm ${o.h-iy}mm,${-ix}mm ${-iy}mm)">`}
+  h+=`<img class="dim" src="${UV(src)}" style="left:${ix}mm;top:${iy}mm;width:${iw}mm;height:${ih}mm;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${-ix}mm ${-iy}mm,${o.w-ix}mm ${-iy}mm,${o.w-ix}mm ${o.h-iy}mm,${-ix}mm ${o.h-iy}mm,${-ix}mm ${-iy}mm)">`}
  return h+(o.t=='text'||o.t=='pf'?['nw','ne','e','se','sw','w']:(o.t=='image'||o.t=='logo')&&!cm?['nw','ne','se','sw']:['nw','n','ne','e','se','s','sw','w']).map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')+'</div>'}
 
 const MEAS=new Set();
@@ -158,14 +162,17 @@ function dims(m){if(m&&m.s&&!(m.iw>0)&&!MEAS.has(m)){MEAS.add(m);const i=new Ima
 const allImgs=()=>[...S.products.flatMap(q=>q.imgs.map(m=>[m,m.s,'iw','ih'])),...[...S.pages.flatMap(p=>p.els),...S.master].filter(e=>e.t=='image'&&e.src).map(e=>[e,e.src,'iw','ih']),...(S.brand.logo?[[S.brand,S.brand.logo,'liw','lih']]:[])];
 const measureAll=()=>Promise.all(allImgs().filter(([o,s,a])=>!(o[a]>0)).map(([o,s,a,b])=>new Promise(res=>{const i=new Image();i.onload=()=>{o[a]=i.naturalWidth;o[b]=i.naturalHeight;res()};i.onerror=res;i.src=U(s)})));
 const prodAt=(p,i)=>S.products.find(x=>x.id==(p.ids||[])[i-1]);
-function cardHTML(T,q,x,y,s){return `<div class="el" style="left:${r1(x)}mm;top:${r1(y)}mm;width:${T.w}mm;height:${T.h}mm;transform:scale(${s});transform-origin:0 0;border-radius:${T.cr||0}mm;background:${col(T.bg)}${T.bgImg?`;background-image:url(${U(T.bgImg)});background-size:${T.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}">${T.els.map(e=>elHTML(e,q,1)).join('')}</div>`}
+function cardHTML(T,q,x,y,s){return `<div class="el" style="left:${r1(x)}mm;top:${r1(y)}mm;width:${T.w}mm;height:${T.h}mm;transform:scale(${s});transform-origin:0 0;border-radius:${T.cr||0}mm;background:${col(T.bg)}${T.bgImg?`;background-image:url(${UV(T.bgImg)});background-size:${T.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}">${T.els.map(e=>elHTML(e,q,1)).join('')}</div>`}
 function slotHTML(e,q,ro){if(e.hid)return'';const T=cardPage(),s=Math.min(e.w/T.w,e.h/T.h);
  return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm">${q===undefined?'<div class="ph">Empty slot</div>':cardHTML(T,q,(e.w-T.w*s)/2,(e.h-T.h*s)/2,s)}${ro?'':`<span class="bdg">Product ${e.i}</span>`}</div>`}
 
 const pageHTML=p=>{CP=p;const z=SZ(p),cd=p.type=='card',pt=p.type=='ptpl',T=p.type=='prod'?tplOf(p):null,B=T||p,q0=(cd||pt)?(selProd()||S.products[0]||null):null;
- const bg=`background:${col(B.bg)}${B.bgImg?`;background-image:url(${U(B.bgImg)});background-size:${B.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}${cd&&p.cr?`;border-radius:${p.cr}mm`:''}`;
+ const bg=`background:${col(B.bg)}${B.bgImg?`;background-image:url(${UV(B.bgImg)});background-size:${B.bgFit||'cover'};background-position:center;background-repeat:no-repeat`:''}${cd&&p.cr?`;border-radius:${p.cr}mm`:''}`;
  return `<div class="pg" style="width:${z.w}mm;height:${z.h}mm;${bg}">${p.noMaster||cd?'':S.master.map(e=>elHTML(e)).join('')}${T?T.els.map(e=>e.t=='slot'?slotHTML(e,prodAt(p,e.i),1):bnd(e)?(prodAt(p,e.n||1)?elHTML(e,prodAt(p,e.n||1),1):''):elHTML(e,null,1)).join(''):''}${p.els.map(e=>e.t=='slot'?slotHTML(e,q0,0):elHTML(e,bnd(e)&&pt?(S.products[(e.n||1)-1]||null):q0)).join('')}</div>`};
-function draw(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
+const raf=typeof requestAnimationFrame=='function'?requestAnimationFrame:f=>setTimeout(f,0);
+function draw(){if(dq)return;dq=1;raf(()=>{dq=0;drawNow()})}
+function persist(){if(api.saveImgs){api.save(JSON.stringify(S));if(imgDirty){imgDirty=false;api.saveImgs(JSON.stringify(IMG))}}else api.save(pack())}
+function drawNow(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
  Z=Math.max(.1,Math.min((c.clientWidth-60)/(z.w*PX),(c.clientHeight-60)/(z.h*PX)));
  const cv=$('#canvas');cv.style.zoom=Z;cv.style.setProperty('--hs',(9/(Z*PX)).toFixed(2)+'mm');
  cv.innerHTML=pageHTML(p);
@@ -173,7 +180,7 @@ function draw(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
  if(g>0)cv.querySelectorAll('[data-id]').forEach(n=>{const e=findEl(n.dataset.id);if(e&&(e.t=='text'||e.t=='pf')){const r=n.getBoundingClientRect();e.h=r1(r.height/g/PX);if(e.t=='text'&&e.hug)e.w=r1(r.width/g/PX)}});
  cv.insertAdjacentHTML('beforeend',multi()?msOv():overlay(selEl()));
  $('#bar').style.display=cropId?'flex':'none';tbar();
- clearTimeout(tm);tm=setTimeout(()=>api.save(pack()),800);clearTimeout(ct);ct=setTimeout(commit,350)}
+ clearTimeout(tm);tm=setTimeout(persist,1500);clearTimeout(ct);ct=setTimeout(commit,350)}
 
 const F=(l,k,t='text',x='')=>{const v=get(k)??'';return `<label>${l}${t=='textarea'?`<textarea data-k="${k}">${esc(v)}</textarea>`:`<input data-k="${k}" type="${t}" ${x} step="any" ${t=='checkbox'?(v?'checked':''):`value="${esc(v)}"`}>`}</label>`};
 const SEL=(l,k,o,num)=>`<label>${l}<select data-k="${k}" ${num?'data-num="1"':''}>${o.map(([v,n])=>`<option value="${esc(v)}" ${String(get(k))==String(v)?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`;
@@ -281,8 +288,14 @@ function delProd(){S.products=S.products.filter(p=>p.id!=selP);S.pages.forEach(p
 async function imp(){const r=await api.sheet();if(!r)return;
  r.forEach(o=>{const g=n=>{const k=Object.keys(o).find(x=>x.trim().toLowerCase()==n);return k?String(o[k]):''};
   S.products.push({id:uid(),name:g('name'),cat:g('category'),desc:g('description'),variants:g('variants').replace(/\s*[|;]\s*/g,'\n'),imgs:[],imgScale:100})});panel();draw()}
-async function pdf(){await measureAll();$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
- $('#print').innerHTML=S.pages.filter(p=>!isT(p)).map(p=>pageHTML(p)).join('');const r=await api.pdf();if(r)alert('PDF saved:\n'+r)}
+function lowRes(){const out=[];[...S.pages.filter(p=>!isT(p)).flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&!e.hid){const iw=e.t=='logo'?S.brand.liw:e.iw;if(!(iw>0))return;const c=crop(e),d=Math.round(iw/(c.cw*e.w/25.4));if(d<150)out.push(d)}});return out}
+async function pdf(){await measureAll();const lr=lowRes();
+ if(lr.length&&!confirm(lr.length+' picture(s) have low resolution (lowest '+Math.min(...lr)+' dpi at the size used) and may look pixelated in print. Use a bigger original photo or make it smaller on the page. Export anyway?'))return;
+ PRINT=true;$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
+ $('#print').innerHTML=S.pages.filter(p=>!isT(p)).map(p=>pageHTML(p)).join('');PRINT=false;
+ if(document.fonts)await document.fonts.ready;
+ const im=$('#print').querySelectorAll?[...$('#print').querySelectorAll('img')]:[];await Promise.all(im.map(i=>i.decode?i.decode().catch(()=>{}):0));
+ const r=await api.pdf();$('#print').innerHTML='';if(r)alert('PDF saved:\n'+r)}
 async function openP(){const j=await api.open();if(j){load(j);mig();cur=0;sel=null;cropId=null;lastSize={...S.size};await measureAll();H=[];hi=-1;commit();panel();draw()}}
 const saveP=()=>api.saveAs(pack());
 
@@ -379,6 +392,9 @@ $('#fpv').addEventListener('click',e=>{const n=e.target.closest('.fi');if(n){set
 document.addEventListener('mousedown',e=>{if(fpK!==null&&!e.target.closest('#fpl')&&!e.target.closest('.fpb'))fpClose(0)});
 addEventListener('resize',draw);
 (async()=>{try{fonts=(await api.fonts()).sort()}catch{}
+ const im=api.loadImgs?await api.loadImgs():null;if(im)Object.assign(IMG,JSON.parse(im));
  const j=await api.load();if(j)load(j);else S.pages=defaults();
- mig();lastSize={...S.size};await measureAll();commit();panel();draw()})();
+ mig();lastSize={...S.size};
+ const used=new Set(JSON.stringify(S).match(/i:[a-z0-9]+/g)||[]);let ch=!im&&Object.keys(IMG).length>0;for(const k in IMG)if(!used.has(k)){delete IMG[k];ch=true}if(ch)imgDirty=true;
+ await measureAll();commit();panel();draw();persist()})();
 </script></body></html>
