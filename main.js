@@ -26,8 +26,30 @@ ipcMain.handle('img', async () => {
 ipcMain.handle('sheet', async () => {
   const r = await dialog.showOpenDialog(win, { filters: [{ name: 'Excel / CSV', extensions: ['xlsx', 'xls', 'csv'] }] });
   if (r.canceled) return null;
-  const X = require('xlsx'), wb = X.readFile(r.filePaths[0]);
-  return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+  const f0 = r.filePaths[0], dir = path.dirname(f0), X = require('xlsx');
+  const wb = /\.csv$/i.test(f0) ? X.read(fs.readFileSync(f0, 'utf8'), { type: 'string' }) : X.readFile(f0);
+  const rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+  return rows.map(o => {
+    const imgs = [];
+    Object.keys(o).forEach(k => {
+      if (!/^(image|img|photo|picture)\s*\d*$/i.test(k.trim()) || !String(o[k]).trim()) return;
+      let f = String(o[k]).trim().replace(/^"|"$/g, '');
+      if (!path.isAbsolute(f)) f = path.join(dir, f);
+      const x = path.extname(f).slice(1).toLowerCase();
+      try {
+        if (['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(x) && fs.existsSync(f))
+          imgs.push(`data:image/${x === 'jpg' ? 'jpeg' : x === 'svg' ? 'svg+xml' : x};base64,` + fs.readFileSync(f).toString('base64'));
+      } catch (e) {}
+    });
+    return { ...o, __imgs: imgs };
+  });
+});
+ipcMain.handle('sample', async () => {
+  const r = await dialog.showSaveDialog(win, { defaultPath: 'products-sample.csv' });
+  if (r.canceled) return;
+  fs.writeFileSync(r.filePath, '\ufeffname,category,description,variants,image,image2\n' +
+    'Turmeric Powder,Powder,Pure ground turmeric,100g - Rs 60 | 250g - Rs 140,turmeric.jpg,turmeric-pack.jpg\n' +
+    'Cumin Seeds,Seeds,Whole cumin seeds,100g - Rs 80 | 500g - Rs 360,cumin.jpg,\n');
 });
 ipcMain.handle('saveAs', async (e, j) => {
   const r = await dialog.showSaveDialog(win, { defaultPath: 'catalogue.json' });
