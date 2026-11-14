@@ -57,27 +57,29 @@ function readRows(X, ws) {
 }
 function attachPictures(rows, dir) {
   let files = null;
+  const lazy = rows.length > 25;   // big sheets: keep picture paths only, load pictures when needed
   return rows.map(o => {
-    const imgs = []; let auto = false;
+    const imgs = [], paths = []; let auto = false;
+    const add = f => { paths.push(f); if (!lazy) imgs.push(toDataUrl(f)); };
     Object.keys(o).forEach(k => {
       if (!isImgCol(k) || !String(o[k]).trim()) return;
       let f = cleanTarget(o[k]);
       if (!path.isAbsolute(f)) f = path.join(dir, f);
       const x = path.extname(f).slice(1).toLowerCase();
-      try { if (IMG_EXT.includes(x) && fs.existsSync(f)) imgs.push(toDataUrl(f)); } catch (e) {}
+      try { if (IMG_EXT.includes(x) && fs.existsSync(f)) add(f); } catch (e) {}
     });
     const nk = Object.keys(o).find(k => ['name', 'product', 'product name'].includes(k.trim().toLowerCase()));
     const name = nk ? String(o[nk]).trim() : '';
-    if (!imgs.length && name) {
+    if (!paths.length && name) {
       try {
         files = files || fs.readdirSync(dir).filter(f => IMG_EXT.includes(path.extname(f).slice(1).toLowerCase()));
         const key = nzName(name);
         files.filter(f => { const b = nzName(path.basename(f, path.extname(f))); return b === key || (b.startsWith(key) && /^[0-9]+$/.test(b.slice(key.length))); })
           .sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).slice(0, 6)
-          .forEach(f => { imgs.push(toDataUrl(path.join(dir, f))); auto = true; });
+          .forEach(f => { add(path.join(dir, f)); auto = true; });
       } catch (e) {}
     }
-    return { ...o, __imgs: imgs, __auto: auto };
+    return { ...o, __imgs: imgs, __files: paths, __auto: auto };
   });
 }
 ipcMain.handle('sheet', async () => {
@@ -96,6 +98,44 @@ ipcMain.handle('sample', async () => {
   fs.writeFileSync(r.filePath, '\ufeffname,category,description,variants,image,image2\n' +
     'Turmeric Powder,Powder,Pure ground turmeric,100g - Rs 60 | 250g - Rs 140,turmeric.jpg,turmeric-pack.jpg\n' +
     'Cumin Seeds,Seeds,Whole cumin seeds,100g - Rs 80 | 500g - Rs 360,cumin.jpg,\n');
+});
+const FOLDER_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+// Choose a folder; returns every supported picture in it (paths only, nothing is loaded into memory)
+ipcMain.handle('pickFolder', async () => {
+  const r = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+  if (r.canceled || !r.filePaths[0]) return null;
+  const dir = r.filePaths[0];
+  let names = [];
+  try { names = fs.readdirSync(dir); } catch (e) { return { dir, files: [], error: String(e.message || e) }; }
+  const files = names
+    .filter(n => !n.startsWith('.') && !n.startsWith('~$') && FOLDER_EXT.includes(path.extname(n).slice(1).toLowerCase()))
+    .map(n => path.join(dir, n))
+    .filter(p => { try { return fs.statSync(p).isFile(); } catch (e) { return false; } })
+    .sort((a, b) => path.basename(a).localeCompare(path.basename(b), undefined, { numeric: true, sensitivity: 'base' }))
+    .map(p => ({ path: p, name: path.basename(p), size: fs.statSync(p).size }));
+  return { dir, files };
+});
+// Reads ONE picture file when the catalogue needs it (original quality)
+ipcMain.handle('readImage', async (e, p) => {
+  try {
+    const x = path.extname(String(p)).slice(1).toLowerCase();
+    if (!FOLDER_EXT.concat(['svg']).includes(x) || !fs.existsSync(p)) return null;
+    return toDataUrl(p);
+  } catch (err) { return null; }
+});
+// Writes the product list to a new Excel (.xlsx) or CSV file with the same columns the importer reads
+ipcMain.handle('exportSheet', async (e, rows) => {
+  const r = await dialog.showSaveDialog(win, { defaultPath: 'products.xlsx', filters: [{ name: 'Excel', extensions: ['xlsx'] }, { name: 'CSV (UTF-8)', extensions: ['csv'] }] });
+  if (r.canceled) return null;
+  const X = require('xlsx'), n = Math.max(4, ...rows.map(o => (o.pics || []).length));
+  const head = ['name', 'category', 'description', 'variants', 'image'].concat(Array.from({ length: n - 1 }, (_, i) => 'image' + (i + 2)));
+  const aoa = [head].concat(rows.map(o => [o.name || '', o.cat || '', o.desc || '', String(o.variants || '').split(/\r?\n/).filter(Boolean).join(' | ')]
+    .concat(Array.from({ length: n }, (_, i) => (o.pics || [])[i] || ''))));
+  const ws = X.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch: 26 }, { wch: 16 }, { wch: 38 }, { wch: 34 }].concat(Array.from({ length: n }, () => ({ wch: 40 })));
+  if (/\.csv$/i.test(r.filePath)) { fs.writeFileSync(r.filePath, '\ufeff' + X.utils.sheet_to_csv(ws)); return r.filePath; }
+  const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, 'Products'); X.writeFile(wb, r.filePath);
+  return r.filePath;
 });
 ipcMain.handle('saveFile', async (e, name, data) => {
   const r = await dialog.showSaveDialog(win, { defaultPath: name });
