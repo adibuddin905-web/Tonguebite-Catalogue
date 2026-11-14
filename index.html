@@ -1,1260 +1,828 @@
-# FINAL MASTER PROMPT – FMCG PRODUCT COSTING, PRICING & GOOGLE SHEETS MANAGEMENT SYSTEM
-
-## 1. EXISTING APP & GOOGLE SHEETS INSPECTION – MANDATORY FIRST STEP
-
-**Before making any changes, first inspect my complete existing application and its connected Google Sheets structure.**
-
-This is extremely important.
-
-Follow these steps before implementation:
-
-1. Inspect all existing application screens, features, forms, calculation modes, product records and workflows.
-2. Inspect the connected Google Sheets workbook and all existing tabs, columns, formulas, data validations and relationships.
-3. Understand the existing costing and pricing calculation logic.
-4. Identify which existing tabs, fields and formulas can be reused.
-5. Identify which new tabs, fields and calculations need to be added.
-6. Prepare a safe implementation plan that preserves existing functionality and data.
-
-### Data Safety Rules
-
-- Do not delete any existing Google Sheets tabs.
-- Do not delete or overwrite existing product records.
-- Do not remove existing formulas or calculation logic unless absolutely necessary and explicitly handled through a safe migration.
-- Do not overwrite previously approved prices or historical pricing records.
-- Do not create duplicate tabs or duplicate product records unnecessarily.
-- Reuse existing columns and structures wherever possible.
-- If new columns are required, add them without damaging existing records.
-- If a structural change is necessary, create a safe migration and preserve a backup of the original data.
-- Maintain unique Product IDs, Variety IDs and SKU IDs.
-- Preserve all existing Google Sheets integrations and application functionality.
-
-**Implementation sequence:**
-
-First inspect → Then prepare the migration plan → Then implement new features → Then update Google Sheets → Then verify calculations → Then test all existing and new features.
-
-Do not start by rebuilding the application from scratch.
-
-Do not use dummy data or placeholder calculations in the final implementation.
-
-After implementation, verify that existing products, costing, pricing, history, PDFs and Google Sheets synchronization continue working correctly.
-
----
-
-## 2. PROJECT OBJECTIVE
-
-Upgrade my existing FMCG Product Costing & Pricing Calculator into a professional, fully functional product costing, pricing and price list management system.
-
-Google Sheets must remain the central database and source of truth.
-
-The system must support:
-
-- Multiple products
-- Multiple product varieties and forms
-- Multiple pack types for one product
-- Multiple pack sizes for one product
-- Automatic SKU generation
-- Independent costing for every SKU
-- Individual packaging and manufacturing costs
-- Centralized Business Settings & Default Rates
-- Cost-to-MRP calculation
-- Reverse MRP-to-Grams calculation for regular products only
-- Separate Ladi / Multi-Pouch product management
-- Individual pouch and complete Ladi pricing
-- Separate regular and Ladi PDF price lists
-- Complete Google Sheets documentation
-
-My main objective is to enter one product once, select multiple varieties, packaging types and sizes, and let the application generate all required SKUs with separate costing and pricing.
-
----
-
-## 3. PRODUCT MASTER – PARENT PRODUCT MANAGEMENT
-
-Create a centralized Product Master.
-
-Each product should have one parent product record instead of creating duplicate product records for every packaging type or size.
-
-Fields:
-
-- Product ID (automatically generated)
-- Product Name
-- Product Category
-- Brand Name
-- Product Description
-- Product Variety / Form
-- Raw Material Name
-- Product Status
-- Creation Date
-- Last Updated Date
-
-Allow:
-- Add New Product
-- Select Existing Product
-- Edit Product
-- Duplicate Product
-- Archive Product
-- Delete Product with confirmation
-
-One parent product must support multiple varieties, packaging types and sizes.
-
----
-
-## 4. MULTIPLE PRODUCT VARIETIES / FORMS
-
-The same product can be available in different forms.
-
-For example:
-
-- Product A – Normal Form
-- Product A – Powder Form
-- Product A – Other Variety
-
-Add a multi-select Product Variety / Form option.
-
-Each variety must have independent costing and pricing.
-
-### Powder Form – Additional Costs
-
-When Powder Form is selected, automatically enable:
-
-- Grinding Cost
-- Processing Cost
-- Sieving / Filtering Cost
-- Additional Manufacturing Cost
-- Other Variety-Specific Cost
-
-For Normal Form, grinding cost must not be applied unless specifically enabled.
-
-Allow product-specific overrides.
-
-Each variety can have its own pack types and pack sizes.
-
----
-
-## 5. MULTIPLE PACK TYPES IN ONE PRODUCT ENTRY
-
-When creating a product, provide a multi-select Pack Type field.
-
-Default pack types:
-
-- Pouch
-- Box
-- Jar
-- Bottle
-- Other Packaging
-
-Allow custom pack types to be added.
-
-I should be able to select multiple pack types in one entry.
-
-For example:
-
-Product A:
-- Pouch
-- Box
-
-The system must generate separate SKU combinations for both packaging types.
-
-Each packaging type must have its own independent packaging cost and pricing.
-
----
-
-## 6. MULTIPLE PACK SIZES IN ONE PRODUCT ENTRY
-
-Add a multi-select Pack Size / Weight option.
-
-Default sizes:
-
-- 20g
-- 50g
-- 100g
-- 200g
-- 500g
-- 1kg
-
-Allow custom sizes and units.
-
-For example:
-
-Product A:
-- Pack Types: Pouch and Box
-- Pack Sizes: 20g, 50g and 100g
-
-Automatically generate:
-
-1. Product A – 20g Pouch
-2. Product A – 50g Pouch
-3. Product A – 100g Pouch
-4. Product A – 20g Box
-5. Product A – 50g Box
-6. Product A – 100g Box
-
-Show all generated SKUs in a review table before saving.
-
-Allow individual SKU editing before saving.
-
-Do not create duplicate parent products.
-
----
-
-## 7. INDEPENDENT SKU-WISE COSTING
-
-Every SKU must have its own independent costing and pricing.
-
-For example, Product A – 20g Pouch and Product A – 20g Box must have separate packaging costs.
-
-Maintain separate fields for every SKU:
-
-- SKU ID
-- Product Name
-- Product Variety
-- Pack Type
-- Pack Weight
-- Raw Material Cost
-- Packaging Cost
-- Label Cost
-- Printing Cost
-- Outer Packaging Cost
-- Other Packaging Cost
-- Manufacturing Cost
-- Processing Cost
-- Grinding Cost, if applicable
-- Freight Cost
-- Wastage Cost
-- Marketing Cost
-- Marketing Fund
-- Scheme Recovery
-- Total Product Cost
-- Manufacturer Selling Price
-- Distributor Price
-- Retailer Price
-- MRP
-
-Every SKU must be calculated independently.
-
-Saving or editing one SKU must not overwrite another SKU's costs or prices.
-
-Allow:
-- Edit Individual SKU
-- Duplicate SKU
-- Delete SKU
-- Add New Pack Size Later
-- Add New Pack Type Later
-- Add New Variety Later
-
----
-
-## 8. RAW MATERIAL COSTING – PER KG ONLY
-
-The Raw Material Costing master section must calculate raw material costs per KG only.
-
-Do not show per-pack calculations in this master section because pack weight may not yet be assigned.
-
-Fields:
-
-- Raw Material Name
-- Wholesale Purchase Price per KG
-- Purchase GST %
-- GST Included / Excluded
-- Purchase Price Before GST per KG
-- Purchase GST Amount per KG
-- ITC Eligibility
-- Actual Raw Material Cost per KG
-- Wastage %
-- Usable Material per KG Purchased
-- Wastage-Adjusted Raw Material Cost per Usable KG
-
-### Wastage Calculation
-
-Example:
-
-Purchase 100 KG at ₹100 per KG.
-
-Wastage = 5%.
-
-Usable quantity = 95 KG.
-
-Total purchase cost = ₹10,000.
-
-Effective raw material cost = ₹10,000 ÷ 95 = ₹105.26 per usable KG.
-
-Do not simply add 5% to the raw material cost.
-
-Handle input GST correctly:
-- If ITC is eligible, exclude recoverable input GST from product cost.
-- If ITC is not eligible, include non-creditable GST in product cost.
-
-### Separate Pack-Wise Raw Material Costing
-
-Create a separate Pack-Wise Raw Material Costing section.
-
-Fetch:
-- Product Name
-- SKU
-- Product Variety
-- Pack Type
-- Pack Weight
-- Effective Raw Material Cost per Usable KG
-
-Only calculate pack-wise costs when valid pack weight is available.
-
-Calculate:
-
-- Raw Material Cost per Pack Before Wastage
-- Wastage Cost per Pack
-- Effective Raw Material Cost per Pack
-
-If pack weight is missing, display "Pack Weight Not Assigned".
-
-Never show misleading ₹0 per-pack values.
-
----
-
-## 9. BUSINESS SETTINGS & DEFAULT RATES
-
-Create a centralized Google Sheets tab named:
-
-**Business Settings & Default Rates**
-
-All common business rates and default costing settings must be editable in one place.
-
-The application must automatically fetch these settings for new products and SKUs.
-
-### A. Raw Material & Purchase Settings
-
-- Purchase GST %
-- GST Included / Excluded
-- ITC Eligibility
-- Default Wastage %
-
-### B. Packaging Cost Defaults
-
-Provide separate editable default costs for:
-
-- Pouch Cost
-- Jar Cost
-- Bottle Cost
-- Box Cost
-- Other Packaging Type Cost
-- Outer Packaging Cost
-- Label Cost
-- Printing Cost
-- Packaging Material Cost
-- Other Packaging Expenses
-
-Packaging costing must support:
-
-1. Percentage-Based
-2. Fixed ₹ per Pack
-3. Hybrid (Percentage + Fixed)
-
-For fixed packaging costs, allow individual components:
-
-- Pouch / Jar / Bottle / Box Cost
-- Label Cost
-- Printing Cost
-- Outer Packaging Cost
-- Other Packaging Cost
-
-The system must not charge both fixed and percentage-based packaging unless Hybrid mode is selected.
-
-Packaging costs must be independently editable by SKU.
-
-### C. Manufacturing & Processing Defaults
-
-Add separate editable settings for:
-
-- Manufacturing Cost %
-- Processing Cost
-- Grinding Cost
-- Sieving / Filtering Cost
-- Other Manufacturing Cost
-- Freight %
-- Other Production Expenses
-
-Allow appropriate fixed ₹ or percentage-based costing methods.
-
-Define the calculation base for every percentage.
-
-### D. Marketing & Business Costs
-
-- Marketing Cost %
-- Marketing Fund %
-- Scheme Recovery %
-- Manufacturer Margin %
-- Distributor Margin %
-- Retailer Margin %
-
-### E. GST Settings
-
-Maintain editable GST rates for:
-
-- Purchase GST
-- Manufacturer Sale GST
-- Distributor Sale GST
-- Retailer Sale GST
-- Final Product GST
-
-Use the applicable tax treatment and calculation base at each stage.
-
-### Important Settings Rules
-
-- All default settings must be centrally editable.
-- Product-specific and SKU-specific overrides must be allowed.
-- Clearly show whether a value comes from the default setting or a manual override.
-- Include Effective Date and Last Updated Date.
-- Maintain settings version history.
-- Do not silently change previously approved prices when default settings are updated.
-- Add an explicit "Apply Latest Business Settings" option for existing products.
-- Preserve historical approved pricing.
-
----
-
-## 10. COSTING AND PRICING CALCULATION LOGIC
-
-The application must use one consistent calculation engine for all products.
-
-All percentage-based costs must have clearly defined calculation bases.
-
-Do not apply percentages to arbitrary values.
-
-Distinguish between margin and markup.
-
-Example:
-
-Cost = ₹100.
-
-Selling Price = ₹125.
-
-Markup = 25%.
-
-Margin = 20%.
-
-Margins should default to selling-price-based calculations, with optional markup-on-cost settings where required.
-
-GST must be calculated on the relevant taxable selling value.
-
-GST is not profit.
-
-Example:
-
-Taxable selling value = ₹120.
-
-GST at 5% = ₹6.
-
-Final price including GST = ₹126.
-
-All calculations must be consistent across:
-- Product costing
-- Cost-to-MRP
-- Reverse MRP-to-Grams
-- Individual pouch pricing
-- Ladi pricing
-- Distributor price lists
-- Google Sheets
-
----
-
-## 11. COST-TO-MRP MODE – REGULAR PRODUCTS
-
-For regular products:
-
-The user enters:
-- Product
-- Variety
-- Raw Material
-- Pack Type
-- Pack Weight in grams
-- Applicable product-specific costs and overrides
-
-The application fetches all default settings from Google Sheets.
-
-Automatically calculate:
-
-- Raw Material Cost
-- Wastage
-- Manufacturing Cost
-- Processing Cost
-- Grinding Cost, if applicable
-- Packaging Cost
-- Label and Printing Cost
-- Freight
-- Marketing
-- Marketing Fund
-- Scheme Recovery
-- Manufacturer Margin
-- Distributor Margin
-- Retailer Margin
-- GST
-- Final MRP
-
-The user must NOT manually enter MRP in this mode.
-
-MRP must be calculated automatically.
-
-Allow multiple pack sizes and packaging types in one product entry.
-
----
-
-## 12. REVERSE MRP-TO-GRAMS MODE – REGULAR PRODUCTS ONLY
-
-For regular products, provide a separate Reverse MRP-to-Grams mode.
-
-The user enters:
-- Product
-- Variety
-- Pack Type
-- Desired MRP including GST
-- Applicable costs and margins
-
-The application automatically calculates:
-
-- Exact mathematically calculated pack weight
-- Commercially rounded pack weight
-- Maximum feasible weight at the target MRP
-- Relevant costing breakdown
-
-The user must NOT manually enter pack weight in this mode.
-
-Show the exact result and commercially rounded result separately.
-
-If the desired MRP cannot support the minimum practical pack size, show a clear warning.
-
-Use an accurate mathematical solution based on the same calculation engine as Cost-to-MRP.
-
-**IMPORTANT: This Reverse MRP-to-Grams feature is ONLY for regular products. It must not be available for Ladi / Multi-Pouch products or their price list.**
-
----
-
-## 13. SEPARATE LADI / MULTI-POUCH PRODUCT CATEGORY
-
-Create a separate category and tab:
-
-**LADI / MULTI-POUCH PRODUCTS**
-
-Ladi is a separate commercial product variety.
-
-It must have separate product records, SKU records, costing, pricing, history and PDF price list.
-
-However, it must use the same general costing concepts and centralized Business Settings & Default Rates.
-
-### A. Ladi Configuration
-
-Fields:
-
-- Product Name
-- Product Variety / Form
-- Individual Pouch Weight
-- Number of Individual Pouches per Ladi
-- Total Net Weight per Ladi (automatically calculated)
-- Individual Pouch Packaging Cost
-- Individual Pouch Label Cost
-- Individual Pouch Printing Cost
-- Outer Ladi Packaging Cost
-- Other Packaging Cost
-- Processing Cost
-- Grinding Cost, if applicable
-- Other Manufacturing Cost
-
-Allow different Ladi configurations for the same product.
-
-For example:
-- Product A – 20 Pouches × 5g
-- Product A – 25 Pouches × 5g
-- Product A – 30 Pouches × 10g
-
-Each configuration must be a separate Ladi SKU.
-
-### B. Ladi-Based Weight and Cost Calculation
-
-Ladi costing must be based on the actual number of individual pouches contained in one complete Ladi.
-
-Example:
-
-- Individual Pouch Weight = 5g
-- Number of Pouches per Ladi = 20
-- Total Net Weight per Ladi = 100g
-
-Formula:
-
-Total Net Weight per Ladi = Individual Pouch Weight × Number of Pouches.
-
-Calculate:
-
-1. Raw Material Cost per Ladi = Cost of the total 100g usable raw material.
-2. Individual Pouch Packaging Cost = Cost per pouch × 20.
-3. Individual Pouch Label Cost = Cost per label × 20.
-4. Individual Pouch Printing Cost = Cost per pouch × 20.
-5. Outer Ladi Packaging Cost = Actual cost of one complete Ladi's outer packaging.
-6. Applicable Manufacturing / Processing / Grinding Cost.
-7. Other applicable business costs.
-
-Total Ladi Cost = Sum of all applicable costs.
-
-Apply wastage, freight, marketing, marketing fund, scheme recovery, margins and GST using the same centralized business settings and calculation rules.
-
-**CRITICAL:** Never calculate Ladi MRP by simply copying one individual pouch's price or multiplying its MRP without calculating the complete Ladi cost.
-
-Calculate the complete Ladi independently using total weight, actual pouch quantity, all individual pouch packaging costs and outer Ladi packaging costs.
-
-### C. Individual Pouch Pricing AND Complete Ladi Pricing
-
-For every Ladi product, maintain TWO independent commercial pricing structures.
-
-**1. Individual Pouch Pricing**
-
-Calculate and save:
-
-- Individual Pouch Weight
-- Raw Material Cost per Pouch
-- Wastage Cost per Pouch
-- Individual Pouch Packaging Cost
-- Label Cost per Pouch
-- Printing Cost per Pouch
-- Applicable Manufacturing Cost per Pouch
-- Total Cost per Pouch
-- Manufacturer Selling Price per Pouch
-- Distributor Price per Pouch
-- Retailer Selling Price per Pouch
-- MRP per Individual Pouch
-
-**2. Complete Ladi Pricing**
-
-Calculate and save:
-
-- Number of Pouches per Ladi
-- Total Net Weight per Ladi
-- Total Raw Material Cost per Ladi
-- Total Individual Pouch Packaging Cost
-- Total Individual Pouch Label and Printing Cost
-- Outer Ladi Packaging Cost
-- Other Manufacturing and Processing Costs
-- Total Cost per Ladi
-- Manufacturer Selling Price per Ladi
-- Distributor Price per Ladi
-- Retailer Selling Price per Ladi
-- MRP per Complete Ladi
-
-Both pricing structures must be saved separately.
-
-Individual pouch pricing must represent ONE individual pouch.
-
-Ladi pricing must represent ONE COMPLETE LADI containing the specified number of individual pouches.
-
-Allow commercial price overrides where required, with a clear override indicator and complete pricing history.
-
-### D. No Reverse Calculation for Ladi
-
-The Ladi module must work only in forward costing mode.
-
-I will enter:
-
-- Individual pouch weight
-- Number of pouches per Ladi
-- Packaging costs
-- Applicable manufacturing and business costs
-
-The application will calculate:
-
-- Individual pouch cost and MRP
-- Complete Ladi cost and MRP
-
-Do not provide:
-- Reverse MRP-to-Grams
-- MRP-based weight solving
-- Automatic grams calculation from Ladi MRP
-
-Ladi weight must always be determined by the entered individual pouch weight and pouch quantity.
-
----
-
-## 14. SEPARATE REGULAR AND LADI PRICE LISTS
-
-Create two completely separate price list sections.
-
-### A. REGULAR PRODUCT PRICE LIST
-
-Include:
-
-- Normal Pouch Products
-- Box Products
-- Jar Products
-- Bottle Products
-- Other Packaging Types
-- All Regular Product Varieties and Sizes
-
-Required columns:
-
-1. S.NO.
-2. PRODUCT
-3. PACK TYPE
-4. WEIGHT PER PACK
-5. RATE
-6. DIST. PRICE INCLUDING GST
-7. DIST. MARGIN %
-8. SELLING PRICE
-9. RETAILER PURCHASING PRICE
-10. RETAILER MARGIN %
-11. SELLING PRICE
-12. MRP PER PACK
-
-The RATE column value must represent Manufacturer Selling Price INCLUDING GST, but the header must only say RATE.
-
-Distributor Margin and Retailer Margin must each show:
-- Margin Percentage on the first line
-- Calculated Margin Amount ₹ below it
-
-Keep their respective SELLING PRICE columns separate.
-
-All final MRP values must include applicable GST.
-
-Keep internal raw material costs, manufacturing costs, internal profit and confidential scheme information hidden from the PDF.
-
-### B. LADI / MULTI-POUCH PRICE LIST
-
-Create a separate tab and separate PDF:
-
-**LADI / MULTI-POUCH PRICE LIST**
-
-This price list must show BOTH individual pouch pricing and complete Ladi pricing in the same price list.
-
-Required columns:
-
-1. S.NO.
-2. PRODUCT
-3. VARIETY / FORM
-4. INDIVIDUAL POUCH WEIGHT
-5. NO. OF POUCHES PER LADI
-6. TOTAL WEIGHT PER LADI
-7. INDIVIDUAL POUCH RATE
-8. INDIVIDUAL POUCH MRP
-9. LADI RATE
-10. LADI MRP
-
-Definitions:
-
-- INDIVIDUAL POUCH RATE = Manufacturer Selling Price including applicable GST for ONE individual pouch.
-- INDIVIDUAL POUCH MRP = MRP including GST for ONE individual pouch.
-- LADI RATE = Manufacturer Selling Price including applicable GST for ONE COMPLETE LADI.
-- LADI MRP = MRP including GST for ONE COMPLETE LADI.
-
-Example:
-
-Product A:
-
-- Individual Pouch Weight = 5g
-- Number of Pouches per Ladi = 20
-- Total Weight per Ladi = 100g
-
-The price list must show:
-
-- Individual Pouch Rate = Price of one 5g pouch.
-- Individual Pouch MRP = MRP of one 5g pouch.
-- Ladi Rate = Price of the complete 20-pouch Ladi.
-- Ladi MRP = MRP of the complete 20-pouch Ladi.
-
-**IMPORTANT:**
-
-Ladi Rate and Ladi MRP must be calculated from the complete Ladi costing, including all individual pouches, their packaging, labels, printing, outer Ladi packaging and applicable costs.
-
-Do not simply multiply the individual pouch MRP to obtain Ladi MRP.
-
-If one product has different Ladi configurations, show each configuration separately.
-
-Do not mix Ladi products into the regular product price list.
-
-Do not provide any Reverse MRP-to-Grams calculation in the Ladi price list.
-
----
-
-## 15. PDF COMPANY BRANDING & LAYOUT
-
-Create an editable Google Sheets tab:
-
-**Company Profile & Branding**
-
-Fields:
-
-- Company Name
-- Company Logo URL / Upload
-- Company Address
-- Phone
-- Email
-- Website
-- GSTIN
-- Price List Title
-- Currency
-- PDF Primary Colour
-- PDF Secondary Colour
-- Footer Text
-- Authorized Signatory
-- Effective Date
-- Tagline
-
-Use these settings automatically in both PDFs.
-
-### PDF Layout
-
-Sequence:
-
-1. Company Logo on the left.
-2. Company Name prominently displayed.
-3. Company Address, Phone, Website and Email below Company Name.
-4. Centered title: PRICE LIST.
-5. Centered effective period, for example: Effective From: November 2026.
-6. Relevant product price list table.
-7. One blank row or suitable spacing.
-8. Terms & Conditions heading.
-9. Terms & Conditions text.
-
-Do not use the old heading format "Distributor Price List – Effective Date ... | Version ...".
-
-Use a clean, professional A4 landscape layout.
-
-- Repeat table headers across pages.
-- Avoid overlapping text.
-- Use ₹ currency formatting.
-- Ensure serial numbers and page numbers.
-- Keep table columns readable.
-- Keep terms and conditions immediately after the product table where space allows.
-- Continue to the next page if necessary.
-- Do not unnecessarily move terms and conditions to a separate page.
-
-Use customizable font sizes, spacing and layout settings.
-
-Create:
-- PDF Layout Settings
-- PDF Typography Settings
-- PDF Terms & Conditions
-
-Allow live PDF preview and automatic updates when branding, product selection, pricing or layout settings change.
-
-PDF filename examples:
-
-CompanyName_Regular_PriceList_November_2026.pdf
-
-CompanyName_Ladi_PriceList_November_2026.pdf
-
----
-
-## 16. GOOGLE SHEETS – CENTRAL DATABASE STRUCTURE
-
-All data and calculations must be saved and maintained in Google Sheets.
-
-Create or update the following tabs, reusing existing tabs wherever appropriate:
-
-1. Product Master
-2. Product Varieties
-3. SKU / Pack-Wise Product Master
-4. Raw Material Costing
-5. Pack-Wise Raw Material Costing
-6. Packaging Cost Master
-7. Manufacturing & Processing Cost Master
-8. Business Settings & Default Rates
-9. Regular Product Price List
-10. Ladi / Multi-Pouch Products
-11. Ladi / Multi-Pouch Product Price List
-12. Product Costing History
-13. Pricing History
-14. Company Profile & Branding
-15. PDF Layout Settings
-16. PDF Typography Settings
-17. PDF Terms & Conditions
-18. Formula Dictionary
-19. How To Use
-20. Calculation Logic
-
-Additional supporting tabs may be created if required.
-
-The app and Google Sheets must remain synchronized.
-
-Every product, variety, SKU, pack type, pack size, override, cost and approved price must be saved with the correct unique ID and relationship.
-
----
-
-## 17. FORMULA DICTIONARY
-
-Create a detailed Formula Dictionary tab.
-
-For every calculation include:
-
-- Formula / Term Name
-- Meaning in Simple English
-- Meaning in Hinglish
-- Where Used
-- Calculation Formula
-- Calculation Base
-- GST Applicable or Not
-- Practical Example
-- Impact on MRP
-- Additional Notes
-
-Include:
-
-- Purchase GST
-- Input Tax Credit
-- Wastage
-- Usable Raw Material
-- Effective Raw Material Cost per KG
-- Raw Material Cost per Gram
-- Raw Material Cost per Pack
-- Packaging Cost
-- Pouch Cost
-- Jar Cost
-- Bottle Cost
-- Box Cost
-- Label Cost
-- Printing Cost
-- Outer Packaging Cost
-- Processing Cost
-- Grinding Cost
-- Manufacturing Cost
-- Freight
-- Marketing Cost
-- Marketing Fund
-- Scheme Recovery
-- Manufacturer Margin
-- Distributor Margin
-- Retailer Margin
-- Markup vs Margin
-- Taxable Selling Value
-- GST on Selling Price
-- MRP Including GST
-- Reverse MRP-to-Grams for regular products only
-- Individual Pouch Cost and Pricing
-- Total Ladi Weight
-- Total Individual Pouch Packaging Cost per Ladi
-- Outer Ladi Packaging Cost
-- Total Ladi Cost
-- Individual Pouch MRP
-- Complete Ladi MRP
-
-Every formula must match the actual calculation engine.
-
----
-
-## 18. HOW TO USE
-
-Create a beginner-friendly How To Use tab.
-
-Explain step by step:
-
-1. How to add a new product.
-2. How to select an existing product.
-3. How to add multiple product varieties.
-4. How to select multiple pack types.
-5. How to select multiple pack sizes.
-6. How automatic SKU combinations work.
-7. How to edit individual SKU costs.
-8. How to add packaging costs.
-9. How to add label and printing costs.
-10. How Powder Form activates grinding and processing costs.
-11. How Raw Material Costing works per KG.
-12. How Pack-Wise Raw Material Costing works.
-13. How Cost-to-MRP works.
-14. How Reverse MRP-to-Grams works for regular products.
-15. How to create a Ladi / Multi-Pouch product.
-16. How to enter individual pouch weight.
-17. How to enter number of pouches per Ladi.
-18. How individual pouch pricing is calculated.
-19. How complete Ladi pricing is calculated.
-20. How to generate separate Regular and Ladi PDFs.
-21. How to save, edit, duplicate and delete products.
-22. How to update Business Settings.
-23. How to preserve historical approved prices.
-
-Use simple English and Hinglish explanations.
-
----
-
-## 19. CALCULATION LOGIC
-
-Create a detailed Calculation Logic tab.
-
-Document the exact sequence of every calculation.
-
-Include practical worked examples for:
-
-1. Product in Pouch and Box.
-2. Product in 20g, 50g and 100g sizes.
-3. Product in Normal and Powder Form.
-4. Powder Form with grinding cost.
-5. Different pouch, jar, bottle and box costs.
-6. Label and printing costs.
-7. Fixed, percentage and hybrid packaging calculations.
-8. Raw material costing with wastage and ITC.
-9. Individual pouch pricing.
-10. Ladi containing 20 or more pouches.
-11. Individual pouch MRP and complete Ladi MRP.
-12. Distributor and retailer pricing.
-13. GST and margins.
-14. Cost-to-MRP.
-15. Reverse MRP-to-Grams for regular products only.
-
-All worked examples must match the formulas used in the application.
-
----
-
-## 20. GOOGLE SHEETS DESIGN & FORMATTING
-
-Use a professional, colourful and organized Google Sheets design.
-
-- Navy blue headers with white text.
-- Different tab colours for different sections.
-- Yellow for manual input fields.
-- Blue for automatic calculations.
-- Green for final outputs.
-- Red for warnings and errors.
-- Alternating row colours.
-- Freeze header rows.
-- Apply filters.
-- Adjust column widths.
-- Use ₹ currency formatting.
-- Use percentage formatting.
-- Protect formula cells.
-- Keep input fields editable.
-- Add dropdowns for pack types, varieties, GST and settings.
-- Add clear descriptions and notes.
-
-The spreadsheet must be understandable to a person without accounting knowledge.
-
----
-
-## 21. PRODUCT ENTRY SCREEN – COMPLETE WORKFLOW
-
-Create a simple, professional and responsive product entry interface.
-
-### Regular Products
-
-1. Select Existing Product or Add New Product.
-2. Select Product Variety / Form.
-3. Select Multiple Pack Types.
-4. Select Multiple Pack Sizes.
-5. Generate SKU Combinations Automatically.
-6. Review the generated SKUs.
-7. Enter or override individual packaging costs.
-8. Enter applicable manufacturing, processing and grinding costs.
-9. Review automatic costing and pricing.
-10. Save all selected SKUs together.
-
-### Ladi Products
-
-1. Open the separate Ladi / Multi-Pouch Products section.
-2. Select Existing Product or Add New Product.
-3. Select Product Variety.
-4. Enter Individual Pouch Weight.
-5. Enter Number of Pouches per Ladi.
-6. Enter applicable packaging and manufacturing costs.
-7. Automatically calculate total Ladi weight.
-8. Automatically calculate individual pouch costing and MRP.
-9. Automatically calculate complete Ladi costing and MRP.
-10. Save the individual pouch and complete Ladi pricing records.
-
-The Ladi section must not display Reverse MRP-to-Grams.
-
----
-
-## 22. INDIVIDUAL PRODUCT EDITING & UPDATE MANAGEMENT – MANDATORY
-
-The application must allow me to edit any single existing product independently at any time.
-
-Create a dedicated **Manage Products / Edit Products** section.
-
-### 1. Search and Select Individual Product
-
-Provide:
-- Search Product by Name
-- Search by Product ID
-- Search by SKU
-- Filter by Product Category
-- Filter by Product Variety
-- Filter by Pack Type
-- Filter by Pack Size
-- Filter by Regular / Ladi Product
-
-When I select a product, show all its existing details and SKUs.
-
-### 2. Edit Individual Product Details
-
-Allow me to edit any single product's:
-
-- Product Name
-- Product Category
-- Product Description
-- Product Variety / Form
-- Raw Material
-- Pack Type
-- Pack Size / Weight
-- Packaging Cost
-- Pouch / Jar / Bottle / Box Cost
-- Label Cost
-- Printing Cost
-- Outer Packaging Cost
-- Manufacturing Cost
-- Processing Cost
-- Grinding Cost
-- Freight
-- Wastage
-- Marketing Cost
-- Marketing Fund
-- Scheme Recovery
-- Applicable Margins
-- GST Settings
-- Product-Specific Overrides
-
-Also allow adding or removing pack types, pack sizes and varieties for an existing product.
-
-### 3. Edit One SKU Without Affecting Other SKUs
-
-If a product has multiple SKUs, I must be able to select and edit only one specific SKU.
-
-Example:
-
-Product A:
-- 20g Pouch
-- 50g Pouch
-- 100g Pouch
-- 20g Box
-- 50g Box
-
-If I edit the packaging cost of 20g Pouch, the other four SKUs must remain unchanged.
-
-Changes must apply only to the selected SKU unless I explicitly choose to apply them to multiple SKUs.
-
-### 4. Separate Ladi Product Editing
-
-Provide the same editing facility for Ladi products.
-
-Allow me to independently edit:
-
-- Individual Pouch Weight
-- Number of Pouches per Ladi
-- Individual Pouch Packaging Cost
-- Label and Printing Cost
-- Outer Ladi Packaging Cost
-- Processing and Grinding Costs
-- Other Manufacturing Costs
-- Individual Pouch Pricing
-- Complete Ladi Pricing
-
-If I change the number of pouches per Ladi, automatically recalculate total Ladi weight, total cost and complete Ladi pricing.
-
-Individual pouch pricing must not change unless the relevant individual pouch details or costs are changed.
-
-Never introduce Reverse MRP-to-Grams in the Ladi editing section.
-
-### 5. Save, Update and Cancel Options
-
-Provide clear buttons:
-
-- Edit Product
-- Save Changes
-- Update Product
-- Cancel
-- Reset Changes
-- Duplicate Product
-- Archive Product
-
-Before saving, show a preview of the changes.
-
-Ask for confirmation before applying changes.
-
-### 6. Google Sheets Synchronization
-
-Every edit must update the correct existing product, variety or SKU record in Google Sheets using its unique ID.
-
-Do not create a duplicate product when updating an existing product.
-
-Maintain an edit history containing:
-
-- Product ID
-- SKU ID
-- Field Changed
-- Previous Value
-- Updated Value
-- Date and Time
-- User / Editor, where available
-- Approval Status
-
-### 7. Approved Pricing Protection
-
-If an edited product already has approved pricing:
-
-- Do not silently overwrite its approved price.
-- Show the old approved price and newly calculated price.
-- Show the difference between them.
-- Require explicit confirmation before updating approved pricing.
-- Preserve the previous approved price in Pricing History.
-- Allow saving product details without automatically publishing a new price.
-
-**Most important:** I must be able to open any existing product, edit only that product or one of its SKUs, save the changes, and have those changes synchronized with Google Sheets without affecting other products or their approved prices.
-
----
-
-## 23. HISTORY, APPROVALS AND DATA SAFETY
-
-Maintain separate histories for:
-
-- Product Master Changes
-- Variety Changes
-- SKU Changes
-- Packaging Cost Changes
-- Business Settings Changes
-- Product Costing
-- Regular Product Pricing
-- Ladi Product Pricing
-- PDF Price List Versions
-
-Include:
-
-- Created Date
-- Updated Date
-- Previous Value
-- New Value
-- Settings Version
-- Effective Date
-- Approval Status
-
-Do not overwrite previously approved prices.
-
-When default rates change, show the impact on existing products before applying the new settings.
-
-Require explicit approval before updating existing approved pricing.
-
----
-
-## 24. FINAL NON-NEGOTIABLE REQUIREMENTS
-
-1. Inspect the existing application and Google Sheets before implementation.
-2. Preserve all existing data, tabs, formulas, integrations and approved prices.
-3. Use a safe migration plan for structural changes.
-4. One parent product must support multiple varieties, packaging types and pack sizes.
-5. Automatically generate SKU combinations.
-6. Each SKU must have independent costing and pricing.
-7. Pouch, Jar, Bottle, Box, Label and Printing costs must be centrally manageable.
-8. Powder Form must support additional grinding and processing costs.
-9. Raw Material Costing master must remain per KG only.
-10. Pack-wise raw material costing must be calculated separately.
-11. All default rates must be controlled from Business Settings & Default Rates.
-12. Both Cost-to-MRP and Reverse MRP-to-Grams must work for regular products.
-13. Ladi must have a separate product category and separate price list.
-14. Ladi costing must use actual number of pouches and total weight per Ladi.
-15. Ladi price list must show BOTH individual pouch prices and complete Ladi prices.
-16. Ladi MRP must be calculated from complete Ladi costing, not copied from individual pouch MRP.
-17. Ladi must NOT have Reverse MRP-to-Grams or any MRP-based weight calculation.
-18. Regular and Ladi PDF price lists must remain separate.
-19. All app data and calculations must be synchronized with Google Sheets.
-20. Formula Dictionary, How To Use and Calculation Logic must be updated for every feature.
-21. Preserve existing functionality and historical pricing.
-22. Do not use dummy data or placeholder calculations in the final implementation.
-23. All displayed results must come from actual saved product data and the real calculation engine.
-24. Test all existing and new functionality before declaring implementation complete.
-
-**FINAL GOAL:**
-
-I want one centralized FMCG costing and pricing system where I can enter a product once, select all its varieties, pack types and pack sizes together, and generate separate SKU-wise costing and pricing automatically.
-
-For Ladi products, I want to enter the weight of one individual pouch and the number of pouches in one Ladi. The system must calculate both individual pouch pricing and complete Ladi pricing independently.
-
-All rates, costs, calculations, product information, price lists, formulas, instructions and histories must be maintained in Google Sheets.
-
-The system must be accurate, easy to use, professional and suitable for actual FMCG business operations.
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Catalogue Maker</title>
+<style>
+:root{--ac:#2563eb;--bg:#e9ecf1;--pn:#fff;--bd:#dde1e7;--tx:#1f2937;--mu:#6b7280}
+*{box-sizing:border-box}
+body{margin:0;font:13px/1.4 "Segoe UI",system-ui,sans-serif;display:grid;grid-template-columns:272px 1fr 280px;grid-template-rows:48px 1fr;height:100vh;background:var(--bg);color:var(--tx)}
+header{grid-column:1/4;background:#111827;display:flex;gap:8px;align-items:center;padding:0 14px;color:#fff}
+header b{margin-right:auto;font-weight:600;letter-spacing:.3px}
+button{padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:var(--tx);cursor:pointer;font:inherit}
+button:hover{border-color:#9ca3af}
+header button{background:#1f2937;border-color:#374151;color:#e5e7eb}
+header button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.side{background:var(--pn);overflow:auto;padding:12px;border-right:1px solid var(--bd)}
+#R{border-right:0;border-left:1px solid var(--bd)}
+.side b{display:block;margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--mu)}
+.hint{color:var(--mu);font-size:12px;margin:6px 0}
+#stage{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
+#canvas{position:relative;background:#fff;box-shadow:0 4px 24px #0003}
+label{display:block;margin:8px 0 3px;font-size:11px;color:var(--mu)}
+input:not([type=checkbox]):not([type=color]),textarea,select{width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;font:inherit;background:#fff}
+textarea{height:64px}
+.tabs{display:flex;gap:4px;margin-bottom:10px}
+.tabs button{flex:1;padding:6px 2px}
+.tabs button.on,.row.on{background:#1f2937;color:#fff;border-color:#1f2937}
+.row{padding:7px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--bd);margin:4px 0;background:#fff}
+.ly{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.sm button{padding:3px 7px;font-size:12px;margin:2px 2px 0 0}
+.cp{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.sw{width:22px;height:22px;padding:0;border-radius:50%;border:1px solid #cbd5e1}
+.sw.on{outline:2px solid var(--ac);outline-offset:1px}
+.nof{background:linear-gradient(135deg,#fff 45%,#e11d48 46%,#e11d48 54%,#fff 55%)}
+.cp input[type=color]{width:30px;height:26px;padding:0;border:1px solid var(--bd);border-radius:6px;background:#fff}
+.cp input.hex{width:86px}
+.pg{position:relative;overflow:hidden;break-after:page}
+.pg:last-child{break-after:auto}
+.el{position:absolute;box-sizing:border-box;overflow:hidden}
+.el img{position:absolute;max-width:none;pointer-events:none}
+#canvas .el[data-id]{cursor:move}
+.ov{position:absolute;pointer-events:none;outline:calc(var(--hs)/6) solid #2563eb}
+.dim{position:absolute;opacity:.4;max-width:none}
+.hd{position:absolute;pointer-events:auto;width:var(--hs);height:var(--hs);margin:calc(var(--hs)/-2) 0 0 calc(var(--hs)/-2);background:#fff;border:calc(var(--hs)/8) solid #2563eb;border-radius:20%}
+.hd.nw{left:0;top:0;cursor:nwse-resize}.hd.n{left:50%;top:0;cursor:ns-resize}.hd.ne{left:100%;top:0;cursor:nesw-resize}.hd.e{left:100%;top:50%;cursor:ew-resize}
+.hd.se{left:100%;top:100%;cursor:nwse-resize}.hd.s{left:50%;top:100%;cursor:ns-resize}.hd.sw{left:0;top:100%;cursor:nesw-resize}.hd.w{left:0;top:50%;cursor:ew-resize}
+.bdg{position:absolute;left:0;top:0;z-index:9;background:#2563eb;color:#fff;font:7pt sans-serif;padding:.4mm 1.6mm;pointer-events:none}
+#bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:8px;background:#111827;color:#fff;padding:7px 12px;border-radius:8px;z-index:5;box-shadow:0 4px 16px #0004;font-size:12px;white-space:nowrap}
+#bar button{background:#374151;color:#fff;border-color:#4b5563;padding:4px 9px}
+#bar button.pri{background:var(--ac);border-color:var(--ac)}
+.ov.crop .hd{background:#111;border-color:#fff;border-radius:0}
+.fpb{width:100%;text-align:left;font-size:15px;padding:7px 10px}
+#fpl{position:fixed;right:292px;top:64px;width:270px;max-height:72vh;display:none;flex-direction:column;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 10px 34px #0004;z-index:50;overflow:hidden}
+#fpl input{border:0;border-bottom:1px solid var(--bd);border-radius:0;padding:9px 10px;width:100%;font:inherit}
+#fpv{overflow:auto;flex:1}
+.fi{padding:7px 12px;font-size:17px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi{content-visibility:auto;contain-intrinsic-size:auto 34px}
+.fi.cur{border-left:3px solid var(--ac)}
+.fi.on,.fi:hover{background:#e8f0fe}
+#tb{position:fixed;display:none;gap:4px;background:#111827;padding:5px;border-radius:8px;z-index:20;box-shadow:0 4px 16px #0004}
+#tb button{background:#374151;color:#fff;border-color:#4b5563;padding:4px 9px;font-size:12px}
+.mq{position:absolute;border:calc(var(--hs)/8) dashed #2563eb;background:#2563eb22;pointer-events:none}
+.fph{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-bottom:1px solid var(--bd);font-size:12px;color:var(--mu)}
+.fph button{padding:2px 8px;font-size:12px}
+.fe{padding:12px;color:var(--mu);font-size:13px}
+#canvas.bgedit .el{pointer-events:none;opacity:.55}
+#canvas.bgedit .bgimg{pointer-events:auto;cursor:move;opacity:1}
+#rail{position:absolute;left:10px;top:10px;z-index:6;display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--bd);border-radius:8px;padding:4px;box-shadow:0 2px 10px #0002}
+#rail button{width:46px;padding:5px 0 3px;font-weight:700;font-size:15px;line-height:1.1}
+#rail button small{display:block;font-size:9px;font-weight:400;color:var(--mu)}
+#rail button.on{background:var(--ac);border-color:var(--ac);color:#fff}#rail button.on small{color:#dbeafe}
+#canvas.pen{cursor:crosshair}
+.el.pth{overflow:visible;pointer-events:none}
+.el.pth svg{position:absolute;left:0;top:0;overflow:visible}
+.el.pth path.hit{pointer-events:stroke}.el.pth path.f{pointer-events:visibleFill}
+svg.hl{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.hl line{stroke:#2563eb}svg.hl .pv{stroke:#2563eb;fill:none;stroke-dasharray:3 2}
+.nd,.hn{position:absolute;pointer-events:auto;width:var(--hs);height:var(--hs);margin:calc(var(--hs)/-2) 0 0 calc(var(--hs)/-2);background:#fff;border:calc(var(--hs)/8) solid #2563eb;cursor:pointer}
+.nd.on{background:#2563eb}.hn{border-radius:50%;width:calc(var(--hs)*.8);height:calc(var(--hs)*.8);margin:calc(var(--hs)/-2.5) 0 0 calc(var(--hs)/-2.5)}
+#tr{position:fixed;inset:0;z-index:60;background:#f3f4f6;display:none;flex-direction:column}
+.trh{height:48px;background:#111827;color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px}.trh b{margin-right:6px}.trh span{margin-right:auto;font-size:12px;color:#cbd5e1}
+.trh button{background:#1f2937;border-color:#374151;color:#e5e7eb}
+.trb{flex:1;display:grid;grid-template-columns:290px 1fr 1fr;min-height:0}
+.trside{background:#fff;border-right:1px solid var(--bd);padding:12px;overflow:auto}
+.trside .pair{display:grid;grid-template-columns:1fr 64px;gap:8px;align-items:center}
+.trside .pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.trside details{margin:10px 0;border:1px solid var(--bd);border-radius:6px;padding:6px 8px}
+label.rd{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;color:var(--tx)}
+.trpane{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--bd)}
+.trt{display:flex;align-items:center;gap:10px;padding:6px 10px;background:#fff;border-bottom:1px solid var(--bd);font-size:12px}.trt .zb{margin-left:auto}.trt .zb button{padding:2px 8px}
+.trv{flex:1;overflow:auto;padding:12px}
+.trv.chk{background:conic-gradient(#e5e7eb 25%,#fff 0 50%,#e5e7eb 0 75%,#fff 0) 0 0/16px 16px}
+#trio img,#trvec svg{display:block;max-width:none}
+#trbusy{color:#fbbf24}
+@media(max-width:900px){.trb{grid-template-columns:260px 1fr}#tr .trpane{display:none}#tr:not(.showv) #trpo{display:flex}#tr.showv #trpv{display:flex}}
+#de{position:fixed;inset:0;z-index:62;background:#f3f4f6;display:none;flex-direction:column}
+.deb{flex:1;display:grid;grid-template-columns:1fr 360px;grid-template-rows:minmax(0,1fr) 215px;min-height:0}
+.depre{grid-row:1;grid-column:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.deform{grid-row:1;grid-column:2;overflow:auto;padding:12px;background:#fff;border-left:1px solid var(--bd)}
+.detab{grid-row:2;grid-column:1/3;overflow:auto;background:#fff;border-top:1px solid var(--bd)}
+.denav{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}.denav .pri,.deform .pri{background:var(--ac);border-color:var(--ac);color:#fff}
+#devw{display:flex;align-items:center;justify-content:center;background:#e5e7eb}#deimg{max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center}
+#deimg img{max-width:100%;max-height:100%;object-fit:contain;display:block;box-shadow:0 2px 14px #0003;background:#fff}
+.deno{padding:24px;color:#6b7280;text-align:center;max-width:420px;line-height:1.5}
+#detb table{width:100%;border-collapse:collapse;font-size:12px}#detb th{position:sticky;top:0;background:#f9fafb;text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);color:var(--mu);font-weight:600}
+#detb td{padding:4px 8px;border-bottom:1px solid #f0f1f3;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#detb tr[data-r]{cursor:pointer}#detb tr[data-r]:hover{background:#f3f6fb}#detb tr.on{background:#dbeafe}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0001;color:#888;font:10pt sans-serif}
+#print{display:none}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}img{image-rendering:auto}body{display:block;height:auto;background:none}.ui{display:none!important}#print{display:block}.ph,.bdg{display:none}}
+</style></head><body>
+<header class="ui"><b>Catalogue Maker</b>
+<button onclick="undo()">Undo</button><button onclick="redo()">Redo</button><button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
+<button class="pri" onclick="pdf()">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
+<aside class="side ui" id="L"></aside>
+<main id="stage" class="ui"><div id="rail"><button data-t="sel" class="on" onclick="setTool('sel')" title="Select (V)">V<small>Select</small></button><button data-t="dir" onclick="setTool('dir')" title="Direct selection: move points and handles (A)">A<small>Direct</small></button><button data-t="pen" onclick="setTool('pen')" title="Pen: click for corners, click-drag for curves (P)">P<small>Pen</small></button><button data-t="add" onclick="setTool('add')" title="Add anchor point (click on a path)">+<small>Point</small></button><button data-t="del" onclick="setTool('del')" title="Delete anchor point (click on a point)">&minus;<small>Point</small></button><button data-t="conv" onclick="setTool('conv')" title="Convert anchor point (Shift+C)">&#8736;<small>Corner</small></button><button data-t="free" onclick="setTool('free')" title="Freehand: draw with the mouse or pen">~<small>Free</small></button><button onclick="trOpen()" title="Image Trace: turn a picture into vector paths">T<small>Trace</small></button></div><div id="bar"><span>Crop mode: drag the handles to crop, drag the picture to move it</span><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button><button class="pri" onclick="cropDone()">Done</button></div><div id="canvas"></div></main>
+<aside class="side ui" id="R"></aside>
+<div id="tr" class="ui"><div class="trh"><b>Image Trace</b><span id="trs">Choose or drop a PNG, JPG or WebP picture.</span><button id="trtg" onclick="trToggle()">Before / After</button><button onclick="trClose()">Close</button></div>
+<div class="trb"><aside class="trside">
+<p><button class="pri" onclick="$('#trf').click()">Choose / replace picture</button><input type="file" id="trf" hidden accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" onchange="trPick(this)"></p>
+<label>Mode</label><div class="sm"><label class="rd"><input type="radio" name="trm" value="color" data-tr="mode" checked> Colour</label><label class="rd"><input type="radio" name="trm" value="bw" data-tr="mode"> Black &amp; white</label></div>
+<div id="trw_bw" style="display:none"><label>Threshold (0 - 255)</label><div class="pair"><input type="range" min="0" max="255" value="128" data-tr="threshold"><input type="number" min="0" max="255" value="128" data-tr="threshold"></div></div>
+<div id="trw_c"><label>Colours (2 - 64)</label><div class="pair"><input type="range" min="2" max="64" value="8" data-tr="colors"><input type="number" min="2" max="64" value="8" data-tr="colors"></div></div>
+<label>Curve smoothness</label><div class="pair"><input type="range" min="0" max="100" value="60" data-tr="smooth"><input type="number" min="0" max="100" value="60" data-tr="smooth"></div>
+<label>Detail (more points)</label><div class="pair"><input type="range" min="0" max="100" value="60" data-tr="detail"><input type="number" min="0" max="100" value="60" data-tr="detail"></div>
+<label>Noise removal</label><div class="pair"><input type="range" min="0" max="100" value="20" data-tr="noise"><input type="number" min="0" max="100" value="20" data-tr="noise"></div>
+<label class="rd"><input type="checkbox" data-tr="ignoreWhite"> Ignore white (remove the white background)</label>
+<details><summary>Advanced</summary>
+<label>White means all colours above (200 - 255)</label><div class="pair"><input type="range" min="200" max="255" value="240" data-tr="whiteTol"><input type="number" min="200" max="255" value="240" data-tr="whiteTol"></div>
+<label class="rd"><input type="checkbox" data-tr="enclosed"> Also remove white inside the artwork</label>
+<label>Blur before tracing (0 - 3)</label><div class="pair"><input type="range" min="0" max="3" value="0" data-tr="blur"><input type="number" min="0" max="3" value="0" data-tr="blur"></div>
+<label>Processing size (longest side, px)</label><div class="pair"><input type="range" min="300" max="3000" step="100" value="1200" data-tr="maxPx"><input type="number" min="300" max="3000" step="100" value="1200" data-tr="maxPx"></div></details>
+<p id="trst" class="hint"></p>
+<div class="sm"><button class="pri" onclick="trInsert()">Insert into canvas</button><button onclick="trExport()">Export SVG</button><button onclick="trReset()">Reset trace</button><button onclick="trRun(0)">Reprocess</button></div>
+</aside>
+<section class="trpane" id="trpo"><div class="trt"><b>Original</b><span id="tro"></span><span class="zb"><button onclick="trZ('o',1.25)">+</button><button onclick="trZ('o',.8)">&minus;</button><button onclick="trFit('o')">Fit</button><button onclick="trZ('o',0)">100%</button></span></div><div class="trv" id="trvo"><div id="trio"></div></div></section>
+<section class="trpane" id="trpv"><div class="trt"><b>Vector</b><label class="rd"><input type="checkbox" id="trsync" checked> Sync zoom</label><span class="zb"><button onclick="trZ('v',1.25)">+</button><button onclick="trZ('v',.8)">&minus;</button><button onclick="trFit('v')">Fit</button><button onclick="trZ('v',0)">100%</button></span></div><div class="trv chk" id="trvv"><div id="trvec"></div></div></section>
+</div></div>
+<div id="de" class="ui"><div class="trh"><b>Data entry</b><span id="des"></span><label class="rd" style="color:#e5e7eb;margin:0"><input type="checkbox" id="deonly" onchange="deFilter()"> Only unfinished rows</label><button onclick="exportSheet()">Export Excel</button><button onclick="deClose()">Close</button></div>
+<div class="deb"><section class="depre"><div class="trt"><b>Picture</b><span id="depi"></span><span class="zb"><button onclick="dePic(-1)">&lsaquo;</button><button onclick="dePic(1)">&rsaquo;</button><button onclick="deZ(1.25)">+</button><button onclick="deZ(.8)">&minus;</button><button onclick="deZ(0)">Fit</button></span></div><div class="trv" id="devw"><div id="deimg"></div></div></section>
+<aside class="deform"><div class="denav"><button onclick="dePrev()">&laquo; Previous</button><button class="pri" onclick="deNext()">Next &raquo;</button></div><div id="defm"></div><button class="pri" style="width:100%;margin-top:12px" onclick="deDone()">Mark done and go to next row</button><p class="hint">Shortcuts: Alt+Right / Alt+Left for next / previous row, Ctrl+Enter for done and next. Everything you type is saved automatically.</p></aside>
+<section class="detab"><div id="detb"></div></section></div></div>
+<datalist id="decat"></datalist>
+<div id="tb" class="ui"></div>
+<div id="fpl" class="ui"><input id="fps" placeholder="Type to search fonts, scroll to preview" oninput="fpRender(this.value,1)" onkeydown="fpKey(event)"><div class="fph"><span id="fpc"></span><button onclick="fpRefresh()">Refresh list</button></div><div id="fpv"></div></div>
+<div id="print"></div><style id="pgs"></style>
+<script>
+const PX=3.7795,$=s=>document.querySelector(s);
+let S={brand:{pal:['#7a1f1f','#e8a317','#fff8ec'],font:'Arial',bodyFont:'Arial',logo:'',phone:'+91-0000000000',email:'support@example.com',web:'www.example.com',fssai:'',insta:''},size:{w:210,h:297},master:[],products:[],pages:[]};
+let tool='sel',penE=null,pcur=null,fdraw=null,nsel=[],imgDirty=false,PRINT=false,dq=0,ms=[],gapV=5,H=[],hi=-1,ct,IMG={},fpK=null,fpO=null,fpC=[],fpL=[],fpI=-1,lastClk={id:0,t:0},newTpl=null,nSlots=2,cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
+const uid=()=>Math.random().toString(36).slice(2,8),r1=v=>Math.round(v*10)/10;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const col=c=>c&&c[0]=='@'?S.brand.pal[+c.slice(1)-1]||'#000':c||'#000';
+const fnt=f=>`'${String(f=='@h'?S.brand.font:(!f||f=='@b')?S.brand.bodyFont:f).replace(/'/g,"\\'")}'`;
+let CP={};
+const tk=s=>(s||'').replace(/\{(\w+)\}/g,(m,k)=>k=='title'?(CP.title||CP.name||''):S.brand[k]??m);
+/* images are kept at full original quality; blob URLs only make redraws fast */
+const UC=new Map();
+const U=s=>{if(!s||typeof s!='string')return s;const d=s.startsWith('i:')?(IMG[s]||''):s;if(d.slice(0,5)!='data:')return d||s;let u=UC.get(s);if(!u){const i=d.indexOf(','),bin=atob(d.slice(i+1)),a=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)a[j]=bin.charCodeAt(j);u=URL.createObjectURL(new Blob([a],{type:d.slice(5,d.indexOf(';'))}));UC.set(s,u)}return u};
+const PV=new Map(),PQ=new Set();let pvT;
+function pvq(s,u){if(!PQ.has(s)){PQ.add(s);const i=new Image();i.onload=()=>{const m=Math.max(i.naturalWidth,i.naturalHeight);if(!(m>1600)){PV.set(s,u);return}const k=1600/m,c=document.createElement('canvas');c.width=Math.round(i.naturalWidth*k);c.height=Math.round(i.naturalHeight*k);c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(b=>{if(b){PV.set(s,URL.createObjectURL(b));clearTimeout(pvT);pvT=setTimeout(draw,80)}},'image/webp',.92)};i.src=u}return u}
+const UV=s=>{const u=U(s);return PRINT||!s||typeof s!='string'||!s.startsWith('i:')?u:(PV.get(s)||pvq(s,u))};
+const reg=d=>{for(const k in IMG)if(IMG[k]===d)return k;const k='i:'+uid();IMG[k]=d;imgDirty=true;return k};
+function compact(o){for(const k in o){const v=o[k];if(typeof v=='string'){if(v.startsWith('data:'))o[k]=reg(v)}else if(v&&typeof v=='object')compact(v)}}
+function pack(){const js=JSON.stringify(S),m={};(js.match(/i:[a-z0-9]+/g)||[]).forEach(k=>{if(IMG[k])m[k]=IMG[k]});return JSON.stringify({S,IMG:m})}
+function load(j){const o=JSON.parse(j);if(o&&o.S){S=o.S;Object.assign(IMG,o.IMG||{});imgDirty=true}else S=o;compact(S)}
+function commit(){if(fpK!==null)return;const j=JSON.stringify(S);if(H[hi]===j)return;H=H.slice(0,hi+1);H.push(j);if(H.length>80)H.shift();hi=H.length-1}
+function restore(){penE=null;nsel=[];fdraw=null;S=JSON.parse(H[hi]);mig();cur=Math.min(cur,S.pages.length-1);cropId=null;ms=[];lastSize={...S.size};panel();draw()}
+function undo(){clearTimeout(ct);commit();if(hi>0){hi--;restore()}}
+function redo(){clearTimeout(ct);commit();if(hi<H.length-1){hi++;restore()}}
+const findEl=id=>id=='bg'?(S.pages[cur].bgf||null):(S.pages[cur].els.find(e=>e.id==id)||S.master.find(e=>e.id==id));
+const selEl=()=>findEl(sel),selProd=()=>S.products.find(p=>p.id==selP);
+const cms=()=>ms.includes(sel)?ms.filter(id=>findEl(id)):(findEl(sel)?[sel]:[]),SL=()=>cms().map(findEl),multi=()=>SL().length>1,allEls=()=>[...S.pages[cur].els,...(isT(S.pages[cur])?[]:S.master)],bnd=e=>e.t=='pimg'||e.t=='pf';
+const root=()=>({brand:S.brand,pal:S.brand.pal,size:S.size,el:selEl()||{},page:S.pages[cur],prod:selProd()||{}});
+const get=k=>{const[a,b]=k.split('.');return root()[a][b]};
+const set=(k,v)=>{const[a,b]=k.split('.');root()[a][b]=v};
+const SZ=p=>p.type=='card'?{w:p.w,h:p.h}:S.size;
+const cardDef=()=>{const E=o=>({id:uid(),...o});return{name:'Product card template',type:'card',w:90,h:120,bg:'transparent',cr:3,els:[
+ E({t:'rect',x:0,y:0,w:90,h:120,bg:'#ffffff',bc:'@2',bw:.4,r:3}),E({t:'pimg',x:4,y:4,w:82,h:58,fit:'contain',r:2}),
+ E({t:'pf',f:'name',x:4,y:65,w:82,h:10,size:14,color:'@1',bold:1,align:'left',font:'@h'}),
+ E({t:'pf',f:'cat',x:4,y:75,w:82,h:6,size:8,color:'#666666',bold:1,align:'left',font:'@b'}),
+ E({t:'pf',f:'desc',x:4,y:82,w:82,h:16,size:8,color:'#333333',align:'left',font:'@b'}),
+ E({t:'pf',f:'variants',x:4,y:99,w:82,h:17,size:8,color:'#333333',align:'left',font:'@b'})]}};
+const isT=p=>p.type=='card'||p.type=='ptpl',cardPage=()=>S.pages.find(x=>x.type=='card');
+const tplOf=p=>S.pages.find(x=>x.type=='ptpl'&&x.id==p.tpl)||S.pages.find(x=>x.type=='ptpl');
+function mkTpl(name,cols,rows,nohf,n){const W=S.size.w,H=S.size.h,m=10,top=26,gw=(W-2*m)/cols,gh=(H-top-14)/rows,E=o=>({id:uid(),...o}),els=[];n=n||cols*rows;
+ if(!nohf)els.push(E({t:'rect',x:0,y:0,w:W,h:20,bg:'@1'}),E({t:'text',x:m,y:4,w:W-60,h:12,text:'{title}',size:20,color:'@3',bold:1,align:'left',font:'@h'}),E({t:'logo',x:W-40,y:3,w:30,h:14,lock:1}),E({t:'text',x:m,y:H-9,w:W-2*m,h:6,text:'{web}  |  {phone}  |  {email}',size:9,color:'@1',align:'center',font:'@b'}));
+ for(let i=0;i<n;i++)els.push(E({t:'slot',i:i+1,x:r1(m+(i%cols)*gw+2),y:r1(top+Math.floor(i/cols)*gh+2),w:r1(gw-4),h:r1(gh-4)}));
+ return{id:uid(),name,type:'ptpl',bg:'@3',els,cc:cols,rr:rows,nh:!!nohf}}
+function mig(){const b=S.brand;if(!b.pal)b.pal=[b.c1||'#7a1f1f',b.c2||'#e8a317',b.c3||'#fff8ec'];S.master=S.master||[];
+ [...S.pages.flatMap(p=>p.els),...S.master].forEach(e=>{if(e.t=='path'&&!e.pw){e.pw=e.w;e.ph=e.h}});
+ S.products.forEach(q=>{if(!q.imgs)q.imgs=q.img?[{s:q.img,iw:q.iw||0,ih:q.ih||0}]:[]});
+ [...S.pages.flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&e.lock===undefined)e.lock=1});
+ S.pages.forEach(p=>{if(p.type=='prod'&&!p.cols&&!p.tpl){const n=+p.layout||2,l=S.size.w>S.size.h;p.cols=n==1?1:n==2?(l?2:1):2;p.rows=n==1?1:n==2?(l?1:2):2}});
+ if(!cardPage())S.pages.push(cardDef());
+ if(!S.pages.some(p=>p.type=='ptpl')){const l=S.size.w>S.size.h;[['1 product per page',1,1],['2 products per page',l?2:1,l?1:2],['4 products per page',2,2]].forEach(a=>S.pages.push(mkTpl(...a)))}
+ S.pages.forEach(p=>{if(p.type=='prod'&&!p.tpl){const c=+p.cols||1,r=+p.rows||1;let t=S.pages.find(x=>x.type=='ptpl'&&x.cc==c&&x.rr==r&&x.nh==!!p.noHF);if(!t){t=mkTpl(c+' x '+r+' products',c,r,p.noHF);S.pages.push(t)}p.tpl=t.id}})}
+
+function defaults(){const E=o=>({id:uid(),...o});return[
+{name:'Cover',type:'free',bg:'@1',els:[E({t:'rect',x:0,y:200,w:210,h:97,bg:'@2'}),E({t:'logo',x:70,y:40,w:70,h:40,lock:1}),
+ E({t:'text',x:15,y:110,w:180,h:40,text:'Product Catalogue',size:38,color:'@3',bold:1,align:'center',font:'@h'}),
+ E({t:'text',x:15,y:155,w:180,h:15,text:'Premium quality, packed fresh',size:16,color:'@3',align:'center',font:'@b'}),
+ E({t:'text',x:15,y:270,w:180,h:10,text:'{web}',size:12,color:'@1',align:'center',font:'@b',bold:1})]},
+{name:'About Us',type:'free',bg:'@3',els:[E({t:'text',x:15,y:20,w:180,h:18,text:'About Us',size:28,color:'@1',bold:1,align:'left',font:'@h'}),
+ E({t:'rect',x:15,y:40,w:30,h:1.5,bg:'@2'}),
+ E({t:'text',x:15,y:50,w:180,h:80,text:'Write about your brand here: who you are, what you make and why customers trust you.',size:13,color:'#333',align:'left',font:'@b'}),
+ E({t:'image',x:15,y:140,w:180,h:110,src:'',lock:1})]},
+{name:'Products',type:'prod',title:'Our Products',cols:1,rows:2,ids:[],bg:'@3',els:[]},
+{name:'Contact',type:'free',bg:'@1',els:[E({t:'text',x:15,y:80,w:180,h:25,text:'Thank You',size:36,color:'@3',bold:1,align:'center',font:'@h'}),
+ E({t:'text',x:15,y:125,w:180,h:60,text:'Phone: {phone}\nEmail: {email}\nWeb: {web}\nFSSAI: {fssai}\nInstagram: {insta}',size:14,color:'@3',align:'center',font:'@b'})]}]}
+
+const SAMPLE={name:'Product name',cat:'Category',desc:'Short product description goes here.',variants:'100 g - Rs 120\n250 g - Rs 280'};
+function crop(e){const lg=e.t=='logo',iw=lg?S.brand.liw:e.iw,ih=lg?S.brand.lih:e.ih;
+ if(e.cw)return{cx:e.cx,cy:e.cy,cw:e.cw,ch:e.ch};
+ if(!(iw>0&&ih>0))return{cx:0,cy:0,cw:1,ch:1};
+ const s=(lg?Math.min:Math.max)(e.w/iw,e.h/ih),cw=iw*s/e.w,ch=ih*s/e.h;return{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch}}
+function elHTML(e,q,ro){if(e.hid)return'';if(e.t=='path')return pathHTML(e,ro);const lg=e.t=='logo',im=e.t=='image'||lg,tx=e.t=='text'||e.t=='pf';
+ const rs=[e.r1,e.r2,e.r3,e.r4].map(v=>(v??e.r??0)+'mm').join(' ');let elr=rs,st='',inner='';
+ if(e.t=='rect')st+=`background:${col(e.bg)};`;
+ if(tx){const v=e.t=='pf'?String((q||SAMPLE)[e.f]??''):tk(e.text);st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};${e.t=='text'&&e.hug?'white-space:pre;':''}`;inner=esc(v).replace(/\n/g,'<br>')}
+ if(im){const s=lg?S.brand.logo:e.src;if(s){const c=crop(e);inner=`<img src="${UV(s)}" style="left:${c.cx*100}%;top:${c.cy*100}%;width:${c.cw*100}%;height:${c.ch*100}%">`}else inner=`<div class="ph">${lg?'Logo':'Image'}</div>`}
+ if(e.t=='pimg'){if(q&&q.files&&q.imgs&&q.imgs.length<q.files.length)lazyFiles(q);const m=q&&q.imgs&&q.imgs[(e.idx||1)-1];
+  if(m&&m.s){dims(m);const sc=(q.imgScale||100)/100;
+   if(e.fit=='cover'||!(m.iw>0)){inner=`<img src="${UV(m.s)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
+   else{const a=m.iw/m.ih;let w=e.w,h=w/a;if(h>e.h){h=e.h;w=h*a}w*=sc;h*=sc;inner=`<img src="${UV(m.s)}" style="left:${r1((e.w-w)/2)}mm;top:${r1((e.h-h)/2)}mm;width:${r1(w)}mm;height:${r1(h)}mm;border-radius:${rs}">`;elr='0mm'}}
+  else inner=`<div class="ph">Product image ${e.idx||1}</div>`}
+ st=`left:${e.x}mm;top:${e.y}mm;width:${tx&&e.t=='text'&&e.hug?'max-content':e.w+'mm'};height:${tx?'auto':e.h+'mm'};border-radius:${elr};`+(!tx&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:'')+st;
+ return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="${st}">${inner}</div>`}
+function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;let h=`<div class="ov${cm?' crop':''}" style="left:${o.x}mm;top:${o.y}mm;width:${o.w}mm;height:${o.h}mm">`;
+ if(cm){const c=crop(o),ix=c.cx*o.w,iy=c.cy*o.h,iw=c.cw*o.w,ih=c.ch*o.h,src=o.t=='logo'?S.brand.logo:o.src;
+  h+=`<img class="dim" src="${UV(src)}" style="left:${ix}mm;top:${iy}mm;width:${iw}mm;height:${ih}mm;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${-ix}mm ${-iy}mm,${o.w-ix}mm ${-iy}mm,${o.w-ix}mm ${o.h-iy}mm,${-ix}mm ${o.h-iy}mm,${-ix}mm ${-iy}mm)">`}
+ return h+(o.t=='text'||o.t=='pf'?['nw','ne','e','se','sw','w']:(o.t=='image'||o.t=='logo'||o.t=='bg')&&!cm?['nw','ne','se','sw']:['nw','n','ne','e','se','s','sw','w']).map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')+'</div>'}
+
+const MEAS=new Set();
+function dims(m){if(m&&m.s&&!(m.iw>0)&&!MEAS.has(m)){MEAS.add(m);const i=new Image();i.onload=()=>{m.iw=i.naturalWidth;m.ih=i.naturalHeight;draw()};i.src=U(m.s)}}
+const allImgs=()=>[...S.pages.filter(p=>p.bgImg).map(p=>[p,p.bgImg,'bgiw','bgih']),...S.products.flatMap(q=>q.imgs.map(m=>[m,m.s,'iw','ih'])),...[...S.pages.flatMap(p=>p.els),...S.master].filter(e=>e.t=='image'&&e.src).map(e=>[e,e.src,'iw','ih']),...(S.brand.logo?[[S.brand,S.brand.logo,'liw','lih']]:[])];
+const measureAll=()=>Promise.all(allImgs().filter(([o,s,a])=>!(o[a]>0)).map(([o,s,a,b])=>new Promise(res=>{const i=new Image();i.onload=()=>{o[a]=i.naturalWidth;o[b]=i.naturalHeight;res()};i.onerror=res;i.src=U(s)})));
+const prodAt=(p,i)=>S.products.find(x=>x.id==(p.ids||[])[i-1]);
+function cardHTML(T,q,x,y,s){return `<div class="el" style="left:${r1(x)}mm;top:${r1(y)}mm;width:${T.w}mm;height:${T.h}mm;transform:scale(${s});transform-origin:0 0;border-radius:${T.cr||0}mm;background:${col(T.bg)}">${bgEl(T,{w:T.w,h:T.h},1)}${T.els.map(e=>elHTML(e,q,1)).join('')}</div>`}
+function slotHTML(e,q,ro){if(e.hid)return'';const T=cardPage(),s=Math.min(e.w/T.w,e.h/T.h);
+ return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm">${q===undefined?'<div class="ph">Empty slot</div>':cardHTML(T,q,(e.w-T.w*s)/2,(e.h-T.h*s)/2,s)}${ro?'':`<span class="bdg">Product ${e.i}</span>`}</div>`}
+
+const pageHTML=p=>{CP=p;const z=SZ(p),cd=p.type=='card',pt=p.type=='ptpl',T=p.type=='prod'?tplOf(p):null,B=T||p,q0=(cd||pt)?(selProd()||S.products[0]||null):null;
+ const bg=`background:${col(B.bg)}${cd&&p.cr?`;border-radius:${p.cr}mm`:''}`;
+ return `<div class="pg" style="width:${z.w}mm;height:${z.h}mm;${bg}">${bgEl(B,z)}${p.noMaster||cd?'':S.master.map(e=>elHTML(e)).join('')}${T?T.els.map(e=>e.t=='slot'?slotHTML(e,prodAt(p,e.i),1):bnd(e)?(prodAt(p,e.n||1)?elHTML(e,prodAt(p,e.n||1),1):''):elHTML(e,null,1)).join(''):''}${p.els.map(e=>e.t=='slot'?slotHTML(e,q0,0):elHTML(e,bnd(e)&&pt?(S.products[(e.n||1)-1]||null):q0)).join('')}</div>`};
+const raf=typeof requestAnimationFrame=='function'?requestAnimationFrame:f=>setTimeout(f,0);
+function draw(){if(dq)return;dq=1;raf(()=>{dq=0;drawNow()})}
+function persist(){if(api.saveImgs){api.save(JSON.stringify(S));if(imgDirty){imgDirty=false;api.saveImgs(JSON.stringify(IMG))}}else api.save(pack())}
+function drawNow(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
+ Z=Math.max(.1,Math.min((c.clientWidth-60)/(z.w*PX),(c.clientHeight-60)/(z.h*PX)));
+ const cv=$('#canvas');cv.style.zoom=Z;cv.style.setProperty('--hs',(9/(Z*PX)).toFixed(2)+'mm');
+ cv.innerHTML=pageHTML(p);
+ const pe=cv.firstElementChild,g=pe&&pe.getBoundingClientRect?pe.getBoundingClientRect().width/(z.w*PX):0;
+ if(g>0)cv.querySelectorAll('[data-id]').forEach(n=>{const e=findEl(n.dataset.id);if(e&&(e.t=='text'||e.t=='pf')){const r=n.getBoundingClientRect();e.h=r1(r.height/g/PX);if(e.t=='text'&&e.hug)e.w=r1(r.width/g/PX)}});
+ cv.insertAdjacentHTML('beforeend',(multi()?msOv():overlay(selEl()))+pathOv()+penOv());
+ cv.classList.toggle('pen',tool=='pen'||tool=='free');
+ $('#bar').style.display=cropId?'flex':'none';cv.classList.toggle('bgedit',sel=='bg');tbar();
+ clearTimeout(tm);tm=setTimeout(persist,1500);clearTimeout(ct);ct=setTimeout(commit,350)}
+
+const F=(l,k,t='text',x='')=>{const v=get(k)??'';return `<label>${l}${t=='textarea'?`<textarea data-k="${k}">${esc(v)}</textarea>`:`<input data-k="${k}" type="${t}" ${x} step="any" ${t=='checkbox'?(v?'checked':''):`value="${esc(v)}"`}>`}</label>`};
+const SEL=(l,k,o,num)=>`<label>${l}<select data-k="${k}" ${num?'data-num="1"':''}>${o.map(([v,n])=>`<option value="${esc(v)}" ${String(get(k))==String(v)?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`;
+const C=(l,k)=>{const v=get(k),hx=col(v);return `<label>${l}</label><div class="cp">${S.brand.pal.map((c,i)=>`<button class="sw ${v=='@'+(i+1)?'on':''}" style="background:${c}" title="Brand colour ${i+1}" onclick="setK('${k}','@${i+1}')"></button>`).join('')}<button class="sw nof ${v=='transparent'?'on':''}" title="No colour" onclick="setK('${k}','transparent')"></button><input type="color" data-k="${k}" value="${/^#[0-9a-f]{6}$/i.test(hx)?hx:'#000000'}"><input class="hex" value="${esc(hx)}" onchange="hexK('${k}',this.value)"></div>`};
+const FO=()=>fonts.map(f=>[f,f]);
+const fname=v=>v=='@h'?'Brand heading font':v=='@b'?'Brand body font':v;
+const FP=(l,k,sp)=>`<label>${l}</label><button class="fpb" style="font-family:${fnt(get(k))}" onclick="fpOpen('${k}',${sp?1:0})">${esc(fname(get(k)))}</button>`;
+
+const lab=e=>e.t=='path'?(e.name||'Path'):e.t=='bg'?'Background picture':e.t=='slot'?'Product slot '+e.i:e.t=='text'?'Text: '+String(e.text).slice(0,14):e.t=='pf'?'Field: '+e.f+(e.n?' (P'+e.n+')':''):e.t=='pimg'?'Product image'+(e.n?' (P'+e.n+')':''):e.t=='image'?'Image':e.t=='logo'?'Logo':'Box';
+function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';panel()">${n}</button>`;
+ let h=`<div class="tabs">${T('pages','Pages')}${T('layers','Layers')}${T('prods','Products')}${T('brand','Brand')}</div>`;
+ if(tab=='pages'){const ti=S.pages.findIndex(isT),pts=S.pages.filter(p=>p.type=='ptpl');if(!newTpl&&pts[0])newTpl=pts[0].id;
+  h+=S.pages.map((p,i)=>(i==ti?'<b>Templates</b>':'')+`<div class="row ${i==cur?'on':''}" onclick="go(${i})">${p.type=='card'?'&#9733; ':p.type=='ptpl'?'&#9638; ':(i+1)+'. '}${esc(p.name)}</div>`).join('')
+  +`<p><button onclick="addPg(0)">+ Free page</button></p><label>Template for a new product page</label><select onchange="newTpl=this.value">${pts.map(t=>`<option value="${t.id}" ${t.id==newTpl?'selected':''}>${esc(t.name)}</option>`).join('')}</select><p><button onclick="addPg(1)">+ Product page</button></p>`
+  +`<label>Products on a new page template</label><input type="number" min="1" max="12" value="${nSlots}" onchange="nSlots=+this.value"><p><button onclick="addTpl()">+ New page template</button></p><p><button onclick="mv(-1)">Up</button> <button onclick="mv(1)">Down</button> <button onclick="delPg()">Delete</button></p><b>Page size (mm)</b>`+F('Width','size.w','number')+F('Height','size.h','number')}
+ if(tab=='layers'){const p=S.pages[cur],row=e=>`<div class="row ly ${cms().includes(e.id)?'on':''}" onclick="pick('${e.id}',event)"><span>${esc(lab(e))}</span><span class="sm"><button onclick="event.stopPropagation();lay('${e.id}',1)">&#9650;</button><button onclick="event.stopPropagation();lay('${e.id}',-1)">&#9660;</button><button onclick="event.stopPropagation();tg('${e.id}','hid')">${e.hid?'Show':'Hide'}</button><button onclick="event.stopPropagation();tg('${e.id}','lk')">${e.lk?'Unlock':'Lock'}</button></span></div>`;
+  h+=`<b>Layers on this page (top first)</b>`+([...p.els].reverse().map(row).join('')||'<p class="hint">No layers yet.</p>')+(p.type=='card'?'':`<b>Shared on every page</b>`+([...S.master].reverse().map(row).join('')||'<p class="hint">Nothing shared.</p>'))}
+ if(tab=='prods'){const q=selProd();if(q&&!q.imgScale)q.imgScale=100;if(q)lazyFiles(q);
+  h+=`<button onclick="addProd()">+ Add product</button> <button onclick="imp()">Import Excel/CSV</button> <button onclick="api.sample&&api.sample()">Excel template</button> <button onclick="importFolder()">Import image folder</button> <button onclick="deOpen(selP)">Data entry view</button> <button onclick="exportSheet()">Export Excel</button><p class="hint">Columns: name, category, description, variants (separate sizes with | ). Picture columns: image, image2, image3. Type a file name (picture in the same folder as the Excel file), or select the cell and press Ctrl+K to pick the picture. If left empty, pictures named like the product are found automatically. Same product name = updated, not duplicated.</p>`
+  +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel();draw()">${esc(p.name||'(new)')}</div>`).join('')
+  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size inside its frame (%)','prod.imgScale','range','min="20" max="100"')+pendingHint(q)+'<b>Images</b>'+q.imgs.map((m,i)=>`<div class="row ly"><span>Image ${i+1}</span><span class="sm"><button onclick="pset(${i})">Replace</button><button onclick="pdel(${i})">Remove</button></span></div>`).join('')+`<p><button onclick="pset(${q.imgs.length})">+ Add image</button> <button onclick="delProd()">Delete product</button></p><p class="hint">Add several images, then use Product image slots in the card template and pick Image 1, 2, 3...</p>`:'<p class="hint">Excel/CSV columns: name, category, description, variants</p>')}
+ if(tab=='brand')h+=`<p><button onclick="img(S.brand,'logo')">Choose logo</button></p>`
+  +S.brand.pal.map((c,i)=>F('Colour '+(i+1),'pal.'+i,'color')+(i>2&&i==S.brand.pal.length-1?`<button onclick="S.brand.pal.pop();panel();draw()">Remove colour ${i+1}</button>`:'')).join('')
+  +`<p><button onclick="S.brand.pal.push('#888888');panel();draw()">+ Add colour</button></p>`
+  +FP('Heading font','brand.font')+FP('Body font','brand.bodyFont')+F('Phone','brand.phone')+F('Email','brand.email')+F('Website','brand.web')+F('FSSAI no.','brand.fssai')+F('Instagram','brand.insta')
+  +'<p class="hint">In any text type {phone} {email} {web} {fssai} {insta}. {title} inserts the page heading.</p>';
+ $('#L').innerHTML=h}
+
+function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.id==cropId))cropId=null;
+ let h=toolHint()+'<b>Page</b>'+F('Name','page.name');
+ if(cd)h+=F('Card width (mm)','page.w','number','min="20"')+F('Card height (mm)','page.h','number','min="20"')+F('Card corner radius (mm)','page.cr','number','min="0"')+'<p class="hint">This single card design is used for every product on every product page.</p><p><button onclick="resetCard()">Reset card design</button></p>';
+ if(p.type=='prod'){const pts=S.pages.filter(x=>x.type=='ptpl'),T=tplOf(p),sl=slotsOf(p);
+  h+=F('Page heading (fills {title})','page.title')+SEL('Page template','page.tpl',pts.map(t=>[t.id,t.name]))+F('Hide shared header/footer on this page','page.noMaster','checkbox')+'<b>Products on this page</b>'
+  +sl.map(x=>`<label>Slot ${x.i}</label><select onchange="setSlot(${x.i},this.value)"><option value="">(empty)</option>${S.products.map(q=>`<option value="${q.id}" ${q.id==(p.ids||[])[x.i-1]?'selected':''}>${esc(q.name)}</option>`).join('')}</select>`).join('')
+  +'<p><button onclick="autoFill()">Fill empty slots</button> <button onclick="autoPages()">Add pages for all unused products</button></p><p class="hint">The look of this page comes from its template. Open the template in the Pages tab to change the design for every page that uses it.</p>'}
+ else{h+=C('Background colour','page.bg')+`<b>Background picture</b><p><button onclick="img(S.pages[cur],'bgImg')">${p.bgImg?'Change picture':'Choose picture'}</button>${p.bgImg?' <button onclick="bgRemove()">Remove</button>':''}</p>`+(p.bgImg?`<p><button onclick="bgEditOn()">Adjust with mouse</button></p><div class="sm"><button onclick="bgFit('cover')">Fill page</button><button onclick="bgFit('contain')">Fit inside</button><button onclick="bgFit('stretch')">Stretch</button></div>`:'');
+  if(p.type=='free')h+=F('Hide shared header/footer on this page','page.noMaster','checkbox');
+  if(p.type=='ptpl')h+='<p class="hint">Page template: place Product slots where cards should appear. Every product page using this template gets this design.</p>'}
+ h+=`<b>Add to page</b><div class="sm"><button onclick="addEl('text')">Text</button><button onclick="addEl('image')">Image</button><button onclick="addEl('rect')">Box</button><button onclick="importSvg()">Import SVG</button><button onclick="svgOut(0)">Export page SVG</button>`
+  +(cd||p.type=='ptpl'?`<button onclick="addEl('pimg')">Product image</button><button onclick="addEl('pf','name')">Name</button><button onclick="addEl('pf','cat')">Category</button><button onclick="addEl('pf','desc')">Description</button><button onclick="addEl('pf','variants')">Sizes &amp; prices</button>`:'')+(p.type=='ptpl'?'<button onclick="addEl(\'slot\')">Product slot</button>':'')+'</div>';
+ if(multi())h+=multiPanel();else if(e&&e.t=='bg')h+=bgPanel();else if(e){const im=e.t=='image'||e.t=='logo',tx=e.t=='text'||e.t=='pf';h+=`<b>Selected: ${esc(lab(e))}</b>`;if(e.t=='path')h+=pathPanel(e);
+  if(e.t=='text')h+=F('Text','el.text','textarea');
+  if(e.t=='pf')h+=SEL('Product field','el.f',[['name','Name'],['cat','Category'],['desc','Description'],['variants','Sizes & prices']]);
+  if(bnd(e)&&p.type=='ptpl'){if(!e.n)e.n=1;h+=F('Belongs to product number','el.n','number','min="1"')+'<p class="hint">Product 1 uses the first product picked on the page, product 2 the second, and so on. Place and style each one as you like.</p>'}
+  if(e.t=='slot')h+=F('Product number','el.i','number','min="1"')+'<p class="hint">Product 1 goes in slot 1, and so on. The card design is scaled to fit this box.</p>';
+  if(tx)h+=F('Size (pt)','el.size','number')+(e.t=='text'?F('Fit box to text','el.hug','checkbox'):'')+FP('Font','el.font',1)+C('Colour','el.color')+F('Bold','el.bold','checkbox')+SEL('Text align','el.align',[['left','Left'],['center','Center'],['right','Right']]);
+  if(e.t=='rect')h+=C('Fill colour','el.bg');
+  if(e.t=='image')h+=`<p><button onclick="img(selEl())">Choose image</button> <button onclick="trOpen()">Trace this image</button></p>`;
+  if(e.t=='logo')h+='<p class="hint">The logo comes from the Brand tab.</p>';
+  if(e.t=='pimg')h+=SEL('Which product image','el.idx',[[1,'Image 1'],[2,'Image 2'],[3,'Image 3'],[4,'Image 4'],[5,'Image 5'],[6,'Image 6']],1)+SEL('Image fit','el.fit',[['contain','Whole image'],['cover','Fill frame (crop)']])+'<p class="hint">Corner radius below rounds every product image. Per-product size is in the Products tab.</p>';
+  if(im)h+=`<b>Crop</b><div class="sm">${cropId==e.id?'<button onclick="cropDone()">Done</button>':'<button onclick="cropOn()">Crop with mouse</button>'}<button onclick="zoomImg(1.1)">Zoom +</button><button onclick="zoomImg(1/1.1)">Zoom -</button><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button></div><p class="hint">Resize with the corner handles: the picture and its box always scale together. Use Crop (or double-click) to cut parts away.</p>`;
+  if(!tx&&e.t!='slot'&&e.t!='path')h+=F('Corner radius - all corners (mm)','el.r','number','min="0"')+'<label>Round only some corners</label><div class="sm"><button onclick="rcSet(\'top\')">Top</button><button onclick="rcSet(\'bottom\')">Bottom</button><button onclick="rcSet(\'left\')">Left</button><button onclick="rcSet(\'right\')">Right</button><button onclick="rcSet(\'all\')">All</button><button onclick="rcSet(\'none\')">None</button></div><label>Each corner (mm)</label><div class="g2">'+[['r1','Top-left'],['r2','Top-right'],['r4','Bottom-left'],['r3','Bottom-right']].map(([k,n])=>F(n,'el.'+k,'number','min="0" placeholder="'+(e.r||0)+'"')).join('')+'</div>';
+  if(e.t=='rect'||im)h+=C('Border colour','el.bc')+F('Border size (mm)','el.bw','number','min="0" step="0.5"');
+  h+=`<b>Arrange</b><div class="sm"><button onclick="zo('front')">Bring to front</button><button onclick="zo('fwd')">Forward</button><button onclick="zo('bwd')">Backward</button><button onclick="zo('back')">Send to back</button></div>`
+  +`<b>Align on page</b><div class="sm"><button onclick="al('l')">Left</button><button onclick="al('c')">Centre</button><button onclick="al('r')">Right</button><button onclick="al('t')">Top</button><button onclick="al('m')">Middle</button><button onclick="al('b')">Bottom</button></div>`
+  +`<b>Position and size (mm)</b>`+(tx?['x','y','w']:['x','y','w','h']).map(k=>F(k.toUpperCase(),'el.'+k,'number')).join('')+F('Locked (cannot be moved)','el.lk','checkbox')
+  +(cd||p.type=='ptpl'||e.t=='slot'?'':`<label><input type="checkbox" ${S.master.includes(e)?'checked':''} onchange="toggleAll(this.checked)"> Show on every page (header/footer)</label>`)+`<p><button onclick="delEl()">Delete</button></p>`}
+ $('#R').innerHTML=h}
+const panel=()=>{L();R()};
+
+const go=i=>{if(penE)penFinish();cur=i;sel=null;ms=[];cropId=null;panel();draw()};
+const setK=(k,v)=>{set(k,v);draw();panel()};
+const hexK=(k,v)=>{v=v.trim();if(/^#?[0-9a-f]{3,8}$/i.test(v))setK(k,v[0]=='#'?v:'#'+v)};
+const tog=id=>{const p=S.pages[cur];p.ids=p.ids||[];const i=p.ids.indexOf(id);i<0?p.ids.push(id):p.ids.splice(i,1);draw()};
+const tIdx=()=>{const i=S.pages.findIndex(isT);return i<0?S.pages.length:i};
+function addPg(prod){const at=Math.min(cur+1,tIdx()),p=prod?{name:'Products',type:'prod',tpl:newTpl||S.pages.find(x=>x.type=='ptpl').id,title:'Our Products',ids:[],els:[]}:{name:'Page',type:'free',bg:'@3',els:[]};S.pages.splice(at,0,p);go(at)}
+const mv=d=>{const j=cur+d;if(j<0||j>=S.pages.length||isT(S.pages[cur])||isT(S.pages[j]))return;[S.pages[cur],S.pages[j]]=[S.pages[j],S.pages[cur]];go(j)};
+const delPg=()=>{const p=S.pages[cur];if(p.type=='card')return;
+ if(p.type=='ptpl'){const o=S.pages.filter(x=>x.type=='ptpl'&&x!=p);if(!o.length){alert('Keep at least one page template.');return}if(!confirm('Delete this template? Pages using it will switch to another template.'))return;S.pages.forEach(x=>{if(x.tpl==p.id)x.tpl=o[0].id});if(newTpl==p.id)newTpl=o[0].id;S.pages.splice(cur,1);go(Math.max(0,cur-1));return}
+ if(S.pages.filter(x=>!isT(x)).length>1&&confirm('Delete this page?')){S.pages.splice(cur,1);go(Math.max(0,cur-1))}};
+const used=()=>new Set(S.pages.flatMap(p=>p.type=='prod'?(p.ids||[]).filter(Boolean):[]));
+const slotsOf=p=>[...new Set(tplOf(p).els.filter(x=>x.t=='slot'||bnd(x)).map(x=>x.t=='slot'?x.i:(x.n||1)))].sort((a,b)=>a-b).map(i=>({i}));
+function setSlot(i,v){const p=S.pages[cur];p.ids=p.ids||[];p.ids[i-1]=v;draw()}
+function autoFill(){const p=S.pages[cur],u=used();p.ids=p.ids||[];slotsOf(p).forEach(x=>{if(!p.ids[x.i-1]){const q=S.products.find(y=>!u.has(y.id));if(q){p.ids[x.i-1]=q.id;u.add(q.id)}}});panel();draw()}
+function autoPages(){const base=S.pages[cur];if(!slotsOf(base).length)return;let g=0;
+ while(g++<200){const u=used(),rest=S.products.filter(q=>!u.has(q.id));if(!rest.length)break;const at=Math.min(cur+1,tIdx()),np={name:'Products',type:'prod',tpl:base.tpl,title:base.title||'Our Products',ids:[],els:[]};S.pages.splice(at,0,np);cur=at;slotsOf(np).forEach(x=>{if(rest.length)np.ids[x.i-1]=rest.shift().id})}
+ sel=null;panel();draw()}
+function addTpl(){const n=Math.max(1,Math.min(12,nSlots||2)),l=S.size.w>S.size.h,c=n==1?1:n==2?(l?2:1):Math.ceil(Math.sqrt(n)),t=mkTpl(n+(n==1?' product':' products')+' (custom)',c,Math.ceil(n/c),false,n);S.pages.push(t);newTpl=t.id;go(S.pages.length-1)}
+async function pset(i){const d=await api.img();if(d){selProd().imgs[i]={s:reg(d),iw:0,ih:0};await measureAll();draw();panel()}}
+const pdel=i=>{const q=selProd(),m=q.imgs[i];if(m&&m.p)q.files=(q.files||[]).filter(f=>f!==m.p);q.imgs.splice(i,1);panel();draw()};
+function resetCard(){if(!confirm('Reset the card design to the default?'))return;const i=S.pages.findIndex(p=>p.type=='card');S.pages[i]=cardDef();go(i)}
+function addEl(t,f){const tx=t=='text'||t=='pf',e={id:uid(),t,x:10,y:10,w:tx?60:t=='slot'?70:50,h:tx?10:t=='slot'?100:40,...(t=='text'?{text:'New text',hug:1,size:16,color:'@1',font:'@b',align:'left'}:t=='pf'?{f,size:10,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:t=='pimg'?{fit:'contain',r:0,idx:S.pages[cur].els.filter(x=>x.t=='pimg').length+1}:t=='slot'?{i:S.pages[cur].els.filter(x=>x.t=='slot').length+1,w:70,h:100}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;ms=[];panel();draw()}
+const delEl=()=>{const ids=cms();S.pages[cur].els=S.pages[cur].els.filter(e=>!ids.includes(e.id));S.master=S.master.filter(e=>!ids.includes(e.id));sel=null;ms=[];cropId=null;panel();draw()};
+function toggleAll(on){const e=selEl(),p=S.pages[cur];if(!e)return;if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
+function al(a){const e=selEl(),z=SZ(S.pages[cur]);if(a=='l')e.x=0;if(a=='c')e.x=(z.w-e.w)/2;if(a=='r')e.x=z.w-e.w;if(a=='t')e.y=0;if(a=='m')e.y=(z.h-e.h)/2;if(a=='b')e.y=z.h-e.h;e.x=r1(e.x);e.y=r1(e.y);draw();panel()}
+function zo(m,id){const E=(id?[findEl(id)]:SL()).filter(Boolean);
+ [S.master,S.pages[cur].els].forEach(a=>{const sub=a.filter(e=>E.includes(e));if(!sub.length)return;const i0=a.indexOf(sub[0]),i1=a.indexOf(sub[sub.length-1]);sub.forEach(e=>a.splice(a.indexOf(e),1));
+  a.splice(m=='front'?a.length:m=='back'?0:m=='fwd'?Math.min(a.length,i1-sub.length+2):Math.max(0,i0-1),0,...sub)});panel();draw()}
+const lay=(id,d)=>zo(d>0?'fwd':'bwd',id);
+const tg=(id,k)=>{const e=findEl(id);e[k]=e[k]?0:1;panel();draw()};
+const pick=(id,ev)=>{cropId=null;if(ev&&ev.shiftKey){const c=cms();ms=c.includes(id)?c.filter(x=>x!=id):[...c,id];sel=ms[ms.length-1]||null}else{sel=id;const gm=expand(id);ms=gm.length>1?gm:[]}panel();draw()};
+const cropOn=()=>{cropId=sel;panel();draw()},cropDone=()=>{cropId=null;panel();draw()};
+function rcSet(m){const o=selEl(),v=o.r1??o.r2??o.r3??o.r4??o.r??0,n=v>0?v:5,mp={top:[1,1,0,0],bottom:[0,0,1,1],left:[1,0,0,1],right:[0,1,1,0],all:[1,1,1,1],none:[0,0,0,0]}[m];['r1','r2','r3','r4'].forEach((k,i)=>o[k]=mp[i]?n:0);o.r=0;panel();draw()}
+function zoomImg(f){const o=selEl(),c=crop(o);Object.assign(o,{cx:.5-(.5-c.cx)*f,cy:.5-(.5-c.cy)*f,cw:c.cw*f,ch:c.ch*f});draw()}
+function fitImg(fill){const o=selEl(),lg=o.t=='logo',iw=lg?S.brand.liw:o.iw,ih=lg?S.brand.lih:o.ih;if(!(iw>0))return;
+ if(fill){const s=Math.max(o.w/iw,o.h/ih),cw=iw*s/o.w,ch=ih*s/o.h;Object.assign(o,{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch})}else{o.h=r1(o.w*ih/iw);o.cw=0}
+ draw();panel()}
+async function img(o,k='src'){const d=await api.img();if(!d)return;const first=k=='src'&&!o.src;o[k]=reg(d);if(k=='src'){o.iw=0;o.cw=0}if(k=='logo')S.brand.liw=0;if(k=='bgImg'){o.bgiw=0;o.bgf=null}
+ await measureAll();
+ if(first&&o.iw>0){const pg=SZ(S.pages[cur]);let w=Math.min(o.w,pg.w*.7),h=w*o.ih/o.iw;if(h>pg.h*.7){h=pg.h*.7;w=h*o.iw/o.ih}Object.assign(o,{w:r1(w),h:r1(h)})}
+ if(k=='logo'&&S.brand.liw>0)[...S.pages.flatMap(p=>p.els),...S.master].filter(e=>e.t=='logo').forEach(e=>{const t=Math.min(e.w/S.brand.liw,e.h/S.brand.lih),w=S.brand.liw*t,h=S.brand.lih*t;e.x=r1(e.x+(e.w-w)/2);e.y=r1(e.y+(e.h-h)/2);e.w=r1(w);e.h=r1(h);e.cw=0});
+ draw();panel()}
+function addProd(){const p={id:uid(),name:'New product',cat:'',desc:'',variants:'',imgs:[],imgScale:100};S.products.push(p);selP=p.id;panel();draw()}
+function delProd(){S.products=S.products.filter(p=>p.id!=selP);S.pages.forEach(p=>p.ids&&(p.ids=p.ids.filter(i=>i!=selP)));selP=null;panel();draw()}
+async function imp(){const r=await api.sheet();if(!r)return;
+ if(!r.length){alert('No rows were found in that file. The first row must hold column names: name, category, description, variants.');return}
+ let add=0,upd=0,wi=0,auto=0,skip=0,firstId=null;
+ r.forEach(o=>{const g=(...ns)=>{for(const n of ns){const k=Object.keys(o).find(x=>x.trim().toLowerCase()==n);if(k&&String(o[k]).trim())return String(o[k]).trim()}return''};
+  const name=g('name','product','product name'),files=o.__files||[];
+  const cat=g('category','cat'),desc=g('description','desc'),variants=g('variants','sizes','sizes & prices','size').replace(/\s*[|;]\s*/g,'\n'),imgs=(o.__imgs||[]).map((d,i)=>({s:reg(d),iw:0,ih:0,p:files[i]}));
+  let q=(files.length?S.products.find(p=>p.files&&files.some(f=>p.files.includes(f))):null)||(name?S.products.find(p=>nz(p.name)==nz(name)):null);
+  if(!q&&!name){skip++;return}
+  if(q){upd++;if(name&&q.name!==name){q.name=name;q.auto=false}if(cat)q.cat=cat;if(desc)q.desc=desc;if(variants)q.variants=variants;
+   if(imgs.length)q.imgs=imgs;else if(files.length)q.imgs=q.imgs.filter(m=>files.includes(m.p));if(files.length)q.files=files}
+  else{add++;q={id:uid(),name,cat,desc,variants,imgs,files,imgScale:100};S.products.push(q)}
+  if(imgs.length||files.length)wi++;if(o.__auto)auto++;if(!firstId)firstId=q.id});
+ if(!firstId){alert('No product names were found. Check that the first row has a column called name.');return}
+ await measureAll();selP=firstId;tab='prods';panel();draw();
+ alert(add+' added, '+upd+' updated'+(wi?', '+wi+' with pictures':'')+(auto?' ('+auto+' matched by file name)':'')+'.'+(skip?' '+skip+' rows without a name were skipped.':'')+(wi?'':' Pictures can be added from the Images list of each product.'))}
+function lowRes(){const out=[];[...S.pages.filter(p=>!isT(p)).flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&!e.hid){const iw=e.t=='logo'?S.brand.liw:e.iw;if(!(iw>0))return;const c=crop(e),d=Math.round(iw/(c.cw*e.w/25.4));if(d<150)out.push(d)}});return out}
+async function pdf(){const miss=await attachAll();if(miss&&!confirm(miss+' picture file(s) listed in your products could not be found, so those pictures will be missing from the PDF. Export anyway?'))return;await measureAll();const lr=lowRes();
+ if(lr.length&&!confirm(lr.length+' picture(s) have low resolution (lowest '+Math.min(...lr)+' dpi at the size used) and may look pixelated in print. Use a bigger original photo or make it smaller on the page. Export anyway?'))return;
+ PRINT=true;$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
+ $('#print').innerHTML=S.pages.filter(p=>!isT(p)).map(p=>pageHTML(p)).join('');PRINT=false;
+ if(document.fonts)await document.fonts.ready;
+ const im=$('#print').querySelectorAll?[...$('#print').querySelectorAll('img')]:[];await Promise.all(im.map(i=>i.decode?i.decode().catch(()=>{}):0));
+ const r=await api.pdf();$('#print').innerHTML='';if(r)alert('PDF saved:\n'+r)}
+async function openP(){const j=await api.open();if(j){load(j);mig();cur=0;sel=null;cropId=null;lastSize={...S.size};await measureAll();H=[];hi=-1;commit();panel();draw()}}
+const saveP=()=>api.saveAs(pack());
+
+document.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;let v=e.target.value;
+ if((k=='el.w'||k=='el.h')&&selEl()&&(['image','logo','bg'].includes(selEl().t))){const o=selEl(),r=o.w/o.h,n=+e.target.value;if(n>0){if(k=='el.w'){o.w=n;o.h=r1(n/r)}else{o.h=n;o.w=r1(n*r)}draw()}return}
+ if(k=='el.w'&&selEl()&&selEl().t=='text')selEl().hug=0;
+ if(k=='el.r')['r1','r2','r3','r4'].forEach(c=>delete selEl()[c]);
+ if(/^el\.r[1-4]$/.test(k)&&v===''){delete selEl()[k.slice(3)];draw();return}
+ if(e.target.type=='checkbox')v=e.target.checked?1:0;else if(['number','range'].includes(e.target.type)||e.target.dataset.num)v=+v;
+ set(k,v);draw()});
+document.addEventListener('change',e=>{if(/^el\.(r[1-4]?|w|h)$/.test(e.target.dataset.k||''))panel();if(e.target.dataset.k?.startsWith('size.')){
+ const a=S.size.w/lastSize.w,b=S.size.h/lastSize.h;
+ [...S.pages.filter(p=>p.type!='card').flatMap(p=>p.els),...S.master].forEach(x=>{x.x*=a;x.w*=a;x.y*=b;x.h*=b});lastSize={...S.size};draw()}});
+
+const cvs=$('#canvas');
+cvs.addEventListener('mousemove',ev=>{if(penE){pcur=pagePt(ev);draw()}});
+cvs.addEventListener('mousedown',ev=>{
+ if(tool!='sel'&&toolMouse(ev))return;
+ const hd=ev.target.dataset&&ev.target.dataset.h,el=ev.target.closest&&ev.target.closest('[data-id]'),o=hd?selEl():el&&findEl(el.dataset.id);
+ if(hd&&multi()){gScale(ev,hd);ev.preventDefault();return}
+ if(!o||(!hd&&o.lk)){if(!ev.shiftKey){sel=null;ms=[]}cropId=null;panel();draw();marquee(ev,ev.shiftKey);ev.preventDefault();return}
+ if(ev.shiftKey&&!hd){pick(o.id,ev);ev.preventDefault();return}
+ let grp=!hd&&multi()&&cms().includes(o.id);
+ if(!grp){if(sel!=o.id)cropId=null;sel=o.id;const gm=hd||ev.altKey||o.t=='bg'?[o.id]:expand(o.id);ms=gm.length>1?gm:[];grp=!hd&&multi()}ev.preventDefault();
+ const now=Date.now();if(!hd&&!grp&&(o.t=='image'||o.t=='logo')&&lastClk.id==o.id&&now-lastClk.t<450){cropId=o.id;lastClk={id:0,t:0}}else lastClk={id:o.id,t:now};
+ const sx=ev.clientX,sy=ev.clientY,O={x:o.x,y:o.y,w:o.w,h:o.h},isImg=o.t=='image'||o.t=='logo',isTx=o.t=='text'||o.t=='pf',sz0=o.size,c0=isImg?crop(o):null,pg=SZ(S.pages[cur]),GL=grp?SL().filter(e=>!e.lk):[],GO=GL.map(e=>({x:e.x,y:e.y}));
+ const mvf=m=>{const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);
+  if(o.t=='bg'){if(hd){const w=Math.max(10,O.w+(hd.includes('w')?-dx:dx)),h=w*O.h/O.w;o.w=r1(w);o.h=r1(h);o.x=r1(hd.includes('w')?O.x+O.w-w:O.x);o.y=r1(hd.includes('n')?O.y+O.h-h:O.y)}else{o.x=r1(O.x+dx);o.y=r1(O.y+dy)}}
+  else if(hd&&isTx){
+   if(hd.length==2){const k=Math.max(.2,(O.w+(hd.includes('w')?-dx:dx))/O.w);o.size=Math.max(4,r1(sz0*k));o.x=r1(hd.includes('w')?O.x+O.w-O.w*k:O.x);o.y=r1(hd.includes('n')?O.y+O.h-O.h*k:O.y);if(!o.hug)o.w=r1(O.w*k)}
+   else{o.hug=0;const w=Math.max(8,O.w+(hd=='e'?dx:-dx));o.w=r1(w);if(hd=='w')o.x=r1(O.x+O.w-w)}}
+  else if(hd){let x=O.x,y=O.y,w=O.w,h=O.h;
+   if(hd.includes('e'))w=O.w+dx;if(hd.includes('s'))h=O.h+dy;if(hd.includes('w')){w=O.w-dx;x=O.x+dx}if(hd.includes('n')){h=O.h-dy;y=O.y+dy}
+   if(w<3){if(hd.includes('w'))x-=3-w;w=3}if(h<3){if(hd.includes('n'))y-=3-h;h=3}
+   const uni=isImg&&hd.length==2&&cropId!=o.id;
+   if(uni){const k=Math.max(w/O.w,h/O.h);w=O.w*k;h=O.h*k;if(hd.includes('w'))x=O.x+O.w-w;if(hd.includes('n'))y=O.y+O.h-h}
+   Object.assign(o,{x:r1(x),y:r1(y),w:r1(w),h:r1(h)});
+   if(isImg&&!uni)Object.assign(o,{cx:(c0.cx*O.w-(o.x-O.x))/o.w,cy:(c0.cy*O.h-(o.y-O.y))/o.h,cw:c0.cw*O.w/o.w,ch:c0.ch*O.h/o.h})}
+  else if(grp){GL.forEach((e,i)=>{e.x=r1(GO[i].x+dx);e.y=r1(GO[i].y+dy)})}
+  else if(cropId==o.id){let cx=c0.cx+dx/o.w,cy=c0.cy+dy/o.h;if(c0.cw>=1)cx=Math.min(0,Math.max(1-c0.cw,cx));if(c0.ch>=1)cy=Math.min(0,Math.max(1-c0.ch,cy));Object.assign(o,{cx,cy,cw:c0.cw,ch:c0.ch})}
+  else{let x=O.x+dx,y=O.y+dy;for(const t of[0,(pg.w-O.w)/2,pg.w-O.w])if(Math.abs(x-t)<1.2)x=t;for(const t of[0,(pg.h-O.h)/2,pg.h-O.h])if(Math.abs(y-t)<1.2)y=t;o.x=r1(x);o.y=r1(y)}
+  draw()};
+ const up=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',up);panel()};
+ addEventListener('mousemove',mvf);addEventListener('mouseup',up);panel();draw()});
+cvs.addEventListener('dblclick',ev=>{const el=ev.target.closest('[data-id]'),o=el&&findEl(el.dataset.id);if(o&&!o.lk&&(o.t=='image'||o.t=='logo')){sel=o.id;cropId=o.id;panel();draw()}});
+addEventListener('keydown',ev=>{const tg=ev.target.tagName,ed=tg=='TEXTAREA'||(tg=='INPUT'&&/text|number|search/.test(ev.target.type||'text'));
+ if($('#de').style.display=='flex'){if(ev.key=='Escape'){deClose();return}if(ev.altKey&&ev.key=='ArrowRight'){deNext();ev.preventDefault()}else if(ev.altKey&&ev.key=='ArrowLeft'){dePrev();ev.preventDefault()}else if((ev.ctrlKey||ev.metaKey)&&ev.key=='Enter'){deDone();ev.preventDefault()}return}
+ if($('#tr').style.display=='flex'){if(ev.key=='Escape')trClose();return}
+ if(fpK!==null){if(ev.key=='Escape'){fpClose(0);return}if(ev.target.id!='fps'&&!ev.ctrlKey&&!ev.metaKey){const f=$('#fps');if(ev.key.length==1)f.focus();else if(['ArrowDown','ArrowUp','Enter'].includes(ev.key)){f.focus();fpKey(ev)}}return}
+ if((ev.ctrlKey||ev.metaKey)&&!ed){const k=ev.key.toLowerCase();if(k=='z'){ev.shiftKey?redo():undo();ev.preventDefault();return}if(k=='y'){redo();ev.preventDefault();return}}
+ if(/INPUT|TEXTAREA|SELECT/.test(tg))return;const o=selEl();
+ if(penE){if(ev.key=='Enter'||ev.key=='Escape'){penFinish();return}if(ev.key=='Backspace'){penBack();ev.preventDefault();return}}
+ if(!ev.ctrlKey&&!ev.metaKey){const k=ev.key;if(ev.shiftKey&&k=='C'){setTool('conv');return}
+  if(!ev.shiftKey&&!ev.altKey){const T={v:'sel',a:'dir',p:'pen'}[k];if(T){setTool(T);return}if(k=='+'||k=='='){setTool('add');return}if(k=='-'){setTool('del');return}}}
+ if(ev.key=='Escape'){cropId=null;sel=null;ms=[];panel();draw();return}
+ if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()=='a'){ms=allEls().filter(e=>!e.lk&&!e.hid).map(e=>e.id);sel=ms[ms.length-1]||null;if(ms.length==1)ms=[];panel();draw();ev.preventDefault();return}
+ if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()=='d'&&o){dup();ev.preventDefault();return}
+ if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()=='g'){ev.shiftKey?ungroup():group();ev.preventDefault();return}
+ if(!o)return;if(ev.key=='Delete'){if(o.t=='path'&&nsel.some(n=>n.e==o.id))delNodes(nsel.filter(n=>n.e==o.id));else delEl();return}
+ if((ev.key=='c'||ev.key=='C')&&(o.t=='image'||o.t=='logo')&&!ev.ctrlKey){cropOn();return}
+ const d=ev.shiftKey?5:.5,m={ArrowLeft:['x',-d],ArrowRight:['x',d],ArrowUp:['y',-d],ArrowDown:['y',d]}[ev.key];
+ if(m){if(o.t=='path'&&nsel.some(n=>n.e==o.id))nudgeNodes(o,m[0],m[1]);else SL().forEach(e=>{if(!e.lk)e[m[0]]=r1(e[m[0]]+m[1])});draw();panel();ev.preventDefault()}});
+/* ===================== PEN TOOL: vector path engine ===================== */
+const r3=v=>Math.round(v*1000)/1000,lerp=(a,b,t)=>a+(b-a)*t,mid2=(a,b,t)=>({x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t)});
+const isCurve=(a,b)=>!!(a.ho||b.hi);
+function flat(a,b,n){n=n||14;const c=[a,a.ho||a,b.hi||b,b],o=[];for(let k=1;k<=n;k++){const t=k/n,p01=mid2(c[0],c[1],t),p12=mid2(c[1],c[2],t),p23=mid2(c[2],c[3],t);o.push(mid2(mid2(p01,p12,t),mid2(p12,p23,t),t))}return o}
+function splitSeg(a,b,t){const c=[a,a.ho||a,b.hi||b,b],p01=mid2(c[0],c[1],t),p12=mid2(c[1],c[2],t),p23=mid2(c[2],c[3],t),p012=mid2(p01,p12,t),p123=mid2(p12,p23,t),m=mid2(p012,p123,t),cv=isCurve(a,b);
+ return{a2:cv?p01:null,node:{x:m.x,y:m.y,hi:cv?p012:null,ho:cv?p123:null,sm:cv},b2:cv?p23:null}}
+function rdp(P,tol){if(P.length<3)return P.slice();const keep=new Uint8Array(P.length),st=[[0,P.length-1]];keep[0]=keep[P.length-1]=1;
+ while(st.length){const[a,b]=st.pop(),A=P[a],B=P[b],dx=B.x-A.x,dy=B.y-A.y,L=dx*dx+dy*dy;let md=0,mi=-1;
+  for(let i=a+1;i<b;i++){const p=P[i];let d;if(L==0)d=Math.hypot(p.x-A.x,p.y-A.y);else{const t=Math.max(0,Math.min(1,((p.x-A.x)*dx+(p.y-A.y)*dy)/L));d=Math.hypot(p.x-(A.x+t*dx),p.y-(A.y+t*dy))}if(d>md){md=d;mi=i}}
+  if(md>tol&&mi>0){keep[mi]=1;st.push([a,mi],[mi,b])}}
+ return P.filter((p,i)=>keep[i])}
+function smoothNodes(P,closed,s,corner){const n=P.length,out=P.map(p=>({x:p.x,y:p.y,hi:null,ho:null}));if(!(s>0)||n<3)return out;const cr=Math.cos((corner==null?70:corner)*Math.PI/180);
+ for(let i=0;i<n;i++){if(!closed&&(i==0||i==n-1))continue;const a=P[(i+n-1)%n],p=P[i],b=P[(i+1)%n],d1=Math.hypot(p.x-a.x,p.y-a.y),d2=Math.hypot(b.x-p.x,b.y-p.y);if(!d1||!d2)continue;
+  if(((p.x-a.x)*(b.x-p.x)+(p.y-a.y)*(b.y-p.y))/(d1*d2)<cr)continue;
+  let tx=(b.x-a.x)/6*s,ty=(b.y-a.y)/6*s;const tl=Math.hypot(tx,ty),mx=.45*Math.min(d1,d2);if(tl>mx){tx*=mx/tl;ty*=mx/tl}
+  out[i].hi={x:p.x-tx,y:p.y-ty};out[i].ho={x:p.x+tx,y:p.y+ty};out[i].sm=true}
+ return out}
+function pathD(e){const sx=e.w/(e.pw||e.w||1),sy=e.h/(e.ph||e.h||1);let d='';const f=p=>r3(p.x*sx)+' '+r3(p.y*sy);
+ e.subs.forEach(s=>{const P=s.pts;if(!P.length)return;d+='M'+f(P[0]);for(let i=1;i<=P.length;i++){if(i==P.length&&!s.closed)break;const a=P[i-1],b=P[i%P.length];d+=(a.ho||b.hi)?'C'+f(a.ho||a)+' '+f(b.hi||b)+' '+f(b):'L'+f(b)}if(s.closed)d+='Z'});return d}
+function bake(e){const sx=e.w/(e.pw||e.w||1),sy=e.h/(e.ph||e.h||1);if(Math.abs(sx-1)>1e-6||Math.abs(sy-1)>1e-6){const f=p=>{if(p){p.x*=sx;p.y*=sy}};e.subs.forEach(s=>s.pts.forEach(p=>{f(p);f(p.hi);f(p.ho)}))}e.pw=e.w;e.ph=e.h}
+function curveExt(a,b,add){const c=[a,a.ho||a,b.hi||b,b];['x','y'].forEach(k=>{const p0=c[0][k],p1=c[1][k],p2=c[2][k],p3=c[3][k],A=(p1-p0)-2*(p2-p1)+(p3-p2),B=2*((p2-p1)-(p1-p0)),C=p1-p0,ts=[];
+ if(Math.abs(A)<1e-12){if(Math.abs(B)>1e-12)ts.push(-C/B)}else{const D=B*B-4*A*C;if(D>=0){const q=Math.sqrt(D);ts.push((-B+q)/(2*A),(-B-q)/(2*A))}}
+ ts.forEach(t=>{if(t>0&&t<1){const u=1-t,w=[u*u*u,3*u*u*t,3*u*t*t,t*t*t];add({x:w[0]*c[0].x+w[1]*c[1].x+w[2]*c[2].x+w[3]*c[3].x,y:w[0]*c[0].y+w[1]*c[1].y+w[2]*c[2].y+w[3]*c[3].y})}})})}
+function refit(e){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;const add=p=>{x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y)};
+ e.subs.forEach(s=>{const P=s.pts;P.forEach((p,i)=>{add(p);const n=P[(i+1)%P.length];if((i<P.length-1||s.closed)&&(p.ho||n.hi))curveExt(p,n,add)})});
+ if(x0>x1){x0=y0=0;x1=y1=.01}
+ e.subs.forEach(s=>s.pts.forEach(p=>{p.x-=x0;p.y-=y0;if(p.hi){p.hi.x-=x0;p.hi.y-=y0}if(p.ho){p.ho.x-=x0;p.ho.y-=y0}}));
+ e.x=r3(e.x+x0);e.y=r3(e.y+y0);e.w=Math.max(r3(x1-x0),.01);e.h=Math.max(r3(y1-y0),.01);e.pw=e.w;e.ph=e.h}
+function mkPath(subs,extra){const e={id:uid(),t:'path',x:0,y:0,w:1,h:1,pw:1,ph:1,subs,fill:'transparent',stroke:'@1',sw:.6,dash:'solid',cap:'round',join:'round',opacity:100,fillRule:'nonzero',name:'Path',...extra};refit(e);return e}
+function pathHTML(e,ro){const sw=e.sw||0,da=e.dash=='dashed'?sw*3+' '+sw*2:e.dash=='dotted'?'0.01 '+sw*2.2:'none',cap=e.dash=='dotted'?'round':(e.cap||'butt'),d=pathD(e),nf=!e.fill||e.fill=='transparent',ns=!(sw>0)||!e.stroke||e.stroke=='transparent';
+ return `<div class="el pth" ${ro?'':`data-id="${e.id}"`} style="left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm"><svg style="width:${e.w}mm;height:${e.h}mm" viewBox="0 0 ${e.w} ${e.h}"><path class="f" d="${d}" fill="${nf?'none':col(e.fill)}" fill-rule="${e.fillRule||'nonzero'}" stroke="${ns?'none':col(e.stroke)}" stroke-width="${sw}" stroke-linecap="${cap}" stroke-linejoin="${e.join||'miter'}" stroke-dasharray="${da}" opacity="${(e.opacity==null?100:e.opacity)/100}"/><path class="hit" d="${d}" fill="none" stroke="transparent" stroke-width="${Math.max(sw,2.2)}"/></svg></div>`}
+function nearSeg(e,pt){let best=null;e.subs.forEach((s,si)=>{const P=s.pts,n=s.closed?P.length:P.length-1;for(let i=0;i<n;i++){const a=P[i],b=P[(i+1)%P.length],pts=[{x:a.x,y:a.y},...flat(a,b,24)];
+ for(let k=0;k<pts.length-1;k++){const p=pts[k],q=pts[k+1],dx=q.x-p.x,dy=q.y-p.y,L=dx*dx+dy*dy||1e-9;let u=Math.max(0,Math.min(1,((pt.x-p.x)*dx+(pt.y-p.y)*dy)/L));const d=Math.hypot(pt.x-(p.x+dx*u),pt.y-(p.y+dy*u));if(!best||d<best.d)best={d,si,i,t:(k+u)/(pts.length-1)}}}});return best}
+const pagePt=ev=>{const r=cvs.getBoundingClientRect();return{x:(ev.clientX-r.left)/(PX*Z),y:(ev.clientY-r.top)/(PX*Z)}};
+function setTool(t){if(penE)penFinish();tool=t;nsel=[];fdraw=null;pcur=null;const r=$('#rail');if(r&&r.querySelectorAll)r.querySelectorAll('button').forEach(b=>b.classList&&b.classList.toggle('on',b.dataset.t==t));panel();draw()}
+const HINTS={dir:'Direct selection: click a point and drag it. Drag the round handles to change the curve. Shift+click selects several points. Delete removes the selected points.',pen:'Pen: click to add a corner point, click and drag to make a curve. Click the first point to close the shape. Enter or Esc finishes an open path. Backspace removes the last point. Click the end point of a selected open path to continue it.',add:'Add point: click on a selected path to insert a point without changing its shape.',del:'Delete point: click a point of the selected path to remove it.',conv:'Convert: click a curved point to make it a corner, or click-drag a corner point to pull out curve handles. Alt+drag a handle to break it.',free:'Freehand: hold the mouse button and draw. The line is smoothed into editable curves when you let go.'};
+const toolHint=()=>tool!='sel'?`<p class="hint" style="background:#eff6ff;padding:8px;border-radius:6px;color:#1e3a8a">${HINTS[tool]||''}</p>`:'';
+function pathOv(){const e=selEl();if(!e||e.t!='path'||tool=='sel'||multi())return'';let tot=0;e.subs.forEach(s=>tot+=s.pts.length);if(tot>600&&!nsel.length)return'';
+ const sx=e.w/(e.pw||e.w||1),sy=e.h/(e.ph||e.h||1),pg=SZ(S.pages[cur]),A=p=>({x:e.x+p.x*sx,y:e.y+p.y*sy}),sw=(1.3/(Z*PX)).toFixed(3);let ln='',nd='';
+ e.subs.forEach((s,si)=>s.pts.forEach((p,i)=>{const a=A(p),on=nsel.some(n=>n.e==e.id&&n.s==si&&n.i==i);
+  ['hi','ho'].forEach(k=>{if(p[k]){const h=A(p[k]);ln+=`<line x1="${h.x}" y1="${h.y}" x2="${a.x}" y2="${a.y}" stroke-width="${sw}"/>`;nd+=`<i class="hn" data-hh="${si},${i},${k}" style="left:${h.x}mm;top:${h.y}mm"></i>`}});
+  nd+=`<i class="nd${on?' on':''}" data-n="${si},${i}" style="left:${a.x}mm;top:${a.y}mm"></i>`}));
+ return `<svg class="hl" style="width:${pg.w}mm;height:${pg.h}mm" viewBox="0 0 ${pg.w} ${pg.h}">${ln}</svg>${nd}`}
+function penOv(){const pg=SZ(S.pages[cur]),sw=(1.3/(Z*PX)).toFixed(3);let g='';
+ if(penE&&pcur){const e=findEl(penE);if(e&&e.subs[0].pts.length){const P=e.subs[0].pts,l=P[P.length-1];g+=`<line class="pv" x1="${e.x+l.x}" y1="${e.y+l.y}" x2="${pcur.x}" y2="${pcur.y}" stroke-width="${sw}"/>`}}
+ if(fdraw)g+=`<polyline class="pv" points="${fdraw.pts.map(p=>p.x+','+p.y).join(' ')}" stroke-width="${sw}"/>`;
+ return g?`<svg class="hl" style="width:${pg.w}mm;height:${pg.h}mm" viewBox="0 0 ${pg.w} ${pg.h}">${g}</svg>`:''}
+function pathPanel(e){return C('Fill','el.fill')+C('Stroke','el.stroke')+F('Stroke width (mm)','el.sw','number','min="0" step="0.1"')+SEL('Stroke style','el.dash',[['solid','Solid'],['dashed','Dashed'],['dotted','Dotted']])+SEL('Line cap','el.cap',[['butt','Butt'],['round','Round'],['square','Square']])+SEL('Corner join','el.join',[['miter','Miter'],['round','Round'],['bevel','Bevel']])+F('Opacity (%)','el.opacity','range','min="0" max="100"')+SEL('Fill rule','el.fillRule',[['nonzero','Non-zero'],['evenodd','Even-odd (holes)']])
+ +'<div class="sm"><button onclick="pathClose()">Close / open</button><button onclick="pathRev()">Reverse</button><button onclick="pathJoin()">Join two paths</button><button onclick="svgOut(1)">Export SVG</button></div><p class="hint">Use the A tool to edit points. Select two open paths with Shift+click to join them.</p>'}
+function toolMouse(ev){const pt=pagePt(ev);
+ if(tool=='pen')return penDown(ev,pt);
+ if(tool=='free'){ev.preventDefault();freeDown(pt);return true}
+ const e=selEl();if(!e||e.t!='path')return false;const ds=ev.target.dataset||{};
+ if(ds.hh!=null&&(tool=='dir'||tool=='conv')){hDown(ev,e,ds.hh);return true}
+ if(ds.n!=null){const[s,i]=ds.n.split(',').map(Number);
+  if(tool=='dir'){nDown(ev,e,s,i);return true}
+  if(tool=='del'){delNodes([{e:e.id,s,i}]);return true}
+  if(tool=='conv'){cDown(ev,e,s,i);return true}}
+ if(tool=='add'){bake(e);const b=nearSeg(e,{x:pt.x-e.x,y:pt.y-e.y});if(b&&b.d<10/(PX*Z)){insNode(e,b);ev.preventDefault();return true}}
+ return false}
+function dragWith(mvf,up){const u=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',u);if(up)up();panel();draw()};addEventListener('mousemove',mvf);addEventListener('mouseup',u)}
+function nDown(ev,e,s,i){ev.preventDefault();bake(e);const k=n=>n.e==e.id&&n.s==s&&n.i==i;
+ if(ev.shiftKey)nsel=nsel.some(k)?nsel.filter(n=>!k(n)):[...nsel,{e:e.id,s,i}];else if(!nsel.some(k))nsel=[{e:e.id,s,i}];
+ const sx=ev.clientX,sy=ev.clientY,O=nsel.filter(n=>n.e==e.id).map(n=>{const p=e.subs[n.s].pts[n.i];return{p,x:p.x,y:p.y,hi:p.hi&&{...p.hi},ho:p.ho&&{...p.ho}}});
+ dragWith(m=>{const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);O.forEach(o=>{o.p.x=o.x+dx;o.p.y=o.y+dy;if(o.hi)o.p.hi={x:o.hi.x+dx,y:o.hi.y+dy};if(o.ho)o.p.ho={x:o.ho.x+dx,y:o.ho.y+dy}});draw()},()=>refit(e));panel();draw()}
+function hDown(ev,e,ds){ev.preventDefault();bake(e);const[s,i,k]=ds.split(','),p=e.subs[+s].pts[+i],o=k=='hi'?'ho':'hi',L0=p[o]?Math.hypot(p[o].x-p.x,p[o].y-p.y):null;
+ dragWith(m=>{const q=pagePt(m),h={x:q.x-e.x,y:q.y-e.y};p[k]=h;if(m.altKey)p.sm=false;else if(p.sm){const L=Math.hypot(h.x-p.x,h.y-p.y)||1e-6,l=L0!=null?L0:L;p[o]={x:p.x-(h.x-p.x)/L*l,y:p.y-(h.y-p.y)/L*l}}draw()},()=>refit(e))}
+function cDown(ev,e,s,i){ev.preventDefault();bake(e);const p=e.subs[s].pts[i];
+ if(p.hi||p.ho){p.hi=p.ho=null;p.sm=false;refit(e);panel();draw();return}
+ const sx=ev.clientX,sy=ev.clientY;dragWith(m=>{const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);if(Math.hypot(dx,dy)<.3)return;p.ho={x:p.x+dx,y:p.y+dy};p.hi={x:p.x-dx,y:p.y-dy};p.sm=true;draw()},()=>refit(e))}
+function insNode(e,b){const P=e.subs[b.si].pts,a=P[b.i],c=P[(b.i+1)%P.length],r=splitSeg(a,c,b.t);a.ho=r.a2;c.hi=r.b2;P.splice(b.i+1,0,r.node);nsel=[{e:e.id,s:b.si,i:b.i+1}];refit(e);panel();draw()}
+function delNodes(L){[...new Set(L.map(n=>n.e))].forEach(id=>{const e=findEl(id);if(!e)return;bake(e);const kill=L.filter(n=>n.e==id);e.subs.forEach((s,si)=>{s.pts=s.pts.filter((p,i)=>!kill.some(n=>n.s==si&&n.i==i))});e.subs=e.subs.filter(s=>s.pts.length>1);
+ if(!e.subs.length){S.pages[cur].els=S.pages[cur].els.filter(x=>x!=e);if(sel==id)sel=null}else refit(e)});nsel=[];panel();draw()}
+function nudgeNodes(e,ax,d){bake(e);nsel.filter(n=>n.e==e.id).forEach(n=>{const p=e.subs[n.s].pts[n.i];p[ax]+=d;if(p.hi)p.hi[ax]+=d;if(p.ho)p.ho[ax]+=d});refit(e)}
+function penDown(ev,pt){ev.preventDefault();const tol=9/(PX*Z);let e=penE&&findEl(penE);
+ if(!e){const c=selEl();
+  if(c&&c.t=='path'&&c.subs.length==1&&!c.subs[0].closed){bake(c);const P=c.subs[0].pts,L=P[P.length-1],F0=P[0];
+   if(Math.hypot(c.x+L.x-pt.x,c.y+L.y-pt.y)<tol){penE=c.id;draw();return true}
+   if(Math.hypot(c.x+F0.x-pt.x,c.y+F0.y-pt.y)<tol){P.reverse();P.forEach(p=>{const t=p.hi;p.hi=p.ho;p.ho=t});penE=c.id;draw();return true}}
+  e=mkPath([{pts:[{x:pt.x,y:pt.y,hi:null,ho:null}],closed:false}]);S.pages[cur].els.push(e);sel=e.id;ms=[];nsel=[];penE=e.id;penDrag(e,0,ev);panel();draw();return true}
+ bake(e);const sub=e.subs[0],P=sub.pts;
+ if(P.length>2&&Math.hypot(e.x+P[0].x-pt.x,e.y+P[0].y-pt.y)<tol){sub.closed=true;penE=null;pcur=null;refit(e);panel();draw();return true}
+ P.push({x:pt.x-e.x,y:pt.y-e.y,hi:null,ho:null});penDrag(e,P.length-1,ev);draw();return true}
+function penDrag(e,i,ev){const sx=ev.clientX,sy=ev.clientY,p=e.subs[0].pts[i];
+ dragWith(m=>{if(Math.hypot(m.clientX-sx,m.clientY-sy)<3)return;const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);p.ho={x:p.x+dx,y:p.y+dy};p.hi=m.altKey?null:{x:p.x-dx,y:p.y-dy};p.sm=!m.altKey;draw()})}
+function penFinish(){const e=penE&&findEl(penE);penE=null;pcur=null;if(e){if(e.subs[0].pts.length<2){S.pages[cur].els=S.pages[cur].els.filter(x=>x!=e);sel=null}else{bake(e);refit(e)}}panel();draw()}
+function penBack(){const e=penE&&findEl(penE);if(!e)return;const P=e.subs[0].pts;P.pop();if(!P.length){S.pages[cur].els=S.pages[cur].els.filter(x=>x!=e);sel=null;penE=null}draw()}
+let fsm=.5;
+function freeDown(pt){fdraw={pts:[pt]};dragWith(m=>{const q=pagePt(m),l=fdraw.pts[fdraw.pts.length-1];if(Math.hypot(q.x-l.x,q.y-l.y)>.3){fdraw.pts.push(q);draw()}},()=>{const P=fdraw.pts;fdraw=null;if(P.length<3)return;
+  const e=mkPath([{pts:smoothNodes(rdp(P,fsm),false,1,80),closed:false}]);S.pages[cur].els.push(e);sel=e.id;ms=[]})}
+function pathClose(){const e=selEl();if(!e||e.t!='path')return;bake(e);e.subs.forEach(s=>s.closed=!s.closed);refit(e);panel();draw()}
+const revPts=P=>P.slice().reverse().map(p=>({...p,hi:p.ho,ho:p.hi}));
+function pathRev(){const e=selEl();if(!e||e.t!='path')return;bake(e);e.subs.forEach(s=>{s.pts=revPts(s.pts)});draw()}
+function pathJoin(){const L=SL().filter(e=>e.t=='path'&&e.subs.length==1&&!e.subs[0].closed);if(L.length!=2){alert('Select exactly two open paths (Shift+click) and try again.');return}
+ const[A,B]=L;bake(A);bake(B);const abs=e=>e.subs[0].pts.map(p=>({x:p.x+e.x,y:p.y+e.y,sm:p.sm,hi:p.hi&&{x:p.hi.x+e.x,y:p.hi.y+e.y},ho:p.ho&&{x:p.ho.x+e.x,y:p.ho.y+e.y}}));
+ let a=abs(A),b=abs(B);const d=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y),c=[[d(a[a.length-1],b[0]),0,0],[d(a[a.length-1],b[b.length-1]),0,1],[d(a[0],b[0]),1,0],[d(a[0],b[b.length-1]),1,1]].sort((x,y)=>x[0]-y[0])[0];
+ if(c[1])a=revPts(a);if(c[2]==1)b=revPts(b);
+ let j;if(d(a[a.length-1],b[0])<.5){const m={x:a[a.length-1].x,y:a[a.length-1].y,hi:a[a.length-1].hi,ho:b[0].ho,sm:false};j=[...a.slice(0,-1),m,...b.slice(1)]}else j=[...a,...b];
+ A.subs=[{pts:j,closed:false}];A.x=0;A.y=0;A.w=A.pw=1;A.h=A.ph=1;refit(A);S.pages[cur].els=S.pages[cur].els.filter(x=>x!=B);sel=A.id;ms=[];nsel=[];panel();draw()}
+/* ---------- SVG export / import ---------- */
+function svgPathTag(e){const sw=e.sw||0,da=e.dash=='dashed'?sw*3+' '+sw*2:e.dash=='dotted'?'0.01 '+sw*2.2:'',nf=!e.fill||e.fill=='transparent',ns=!(sw>0)||!e.stroke||e.stroke=='transparent';
+ return `<path transform="translate(${r3(e.x)} ${r3(e.y)})" d="${pathD(e)}" fill="${nf?'none':col(e.fill)}" fill-rule="${e.fillRule||'nonzero'}"`+(ns?'':` stroke="${col(e.stroke)}" stroke-width="${sw}" stroke-linecap="${e.dash=='dotted'?'round':(e.cap||'butt')}" stroke-linejoin="${e.join||'miter'}"`+(da?` stroke-dasharray="${da}"`:''))+((e.opacity==null?100:e.opacity)<100?` opacity="${e.opacity/100}"`:'')+'/>'}
+function svgOf(list,vb){return `<svg xmlns="http://www.w3.org/2000/svg" width="${r3(vb.w)}mm" height="${r3(vb.h)}mm" viewBox="${r3(vb.x)} ${r3(vb.y)} ${r3(vb.w)} ${r3(vb.h)}">${list.map(svgPathTag).join('')}</svg>`}
+function saveText(name,txt){if(api.saveFile)return api.saveFile(name,txt);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'image/svg+xml'}));a.download=name;a.click()}
+function svgOut(selOnly){const L=selOnly?SL().filter(e=>e.t=='path'):S.pages[cur].els.filter(e=>e.t=='path'&&!e.hid);if(!L.length){alert('There are no paths to export. Draw a path with the Pen tool first.');return}
+ const vb=selOnly?bbox(L):Object.assign({x:0,y:0},{w:SZ(S.pages[cur]).w,h:SZ(S.pages[cur]).h});saveText(selOnly?'path.svg':'page-paths.svg',svgOf(L,vb))}
+function parseD(d){const T=String(d).match(/[MmLlHhVvCcSsQqTtAaZz]|-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g)||[];let i=0,cx=0,cy=0,sx=0,sy=0,cmd='',lc=null,lq=null,cu=null;const subs=[],num=()=>parseFloat(T[i++]);
+ const start=(x,y)=>{cu={pts:[{x,y,hi:null,ho:null}],closed:false};subs.push(cu);cx=sx=x;cy=sy=y},lineTo=(x,y)=>{cu.pts.push({x,y,hi:null,ho:null});cx=x;cy=y};
+ const cubic=(x1,y1,x2,y2,x,y)=>{cu.pts[cu.pts.length-1].ho={x:x1,y:y1};cu.pts.push({x,y,hi:{x:x2,y:y2},ho:null});lc={x:x2,y:y2};lq=null;cx=x;cy=y};
+ const quad=(qx,qy,x,y)=>{const x0=cx,y0=cy;cubic(x0+2/3*(qx-x0),y0+2/3*(qy-y0),x+2/3*(qx-x),y+2/3*(qy-y),x,y);lq={x:qx,y:qy};lc=null};
+ while(i<T.length){if(/^[A-Za-z]$/.test(T[i]))cmd=T[i++];if(!cmd)break;const rel=cmd==cmd.toLowerCase(),C=cmd.toUpperCase(),ox=rel?cx:0,oy=rel?cy:0;
+  if(C=='Z'){if(cu){cu.closed=true;cx=sx;cy=sy}lc=lq=null;continue}
+  if(C=='M'){start(num()+ox,num()+oy);cmd=rel?'l':'L';lc=lq=null;continue}
+  if(!cu)start(cx,cy);
+  if(C=='L'){lineTo(num()+ox,num()+oy);lc=lq=null}else if(C=='H'){lineTo(num()+ox,cy);lc=lq=null}else if(C=='V'){lineTo(cx,num()+oy);lc=lq=null}
+  else if(C=='C'){const a=[num()+ox,num()+oy,num()+ox,num()+oy,num()+ox,num()+oy];cubic(...a)}
+  else if(C=='S'){const x2=num()+ox,y2=num()+oy,x=num()+ox,y=num()+oy;cubic(lc?2*cx-lc.x:cx,lc?2*cy-lc.y:cy,x2,y2,x,y)}
+  else if(C=='Q'){const qx=num()+ox,qy=num()+oy;quad(qx,qy,num()+ox,num()+oy)}
+  else if(C=='T'){const x=num()+ox,y=num()+oy;quad(lq?2*cx-lq.x:cx,lq?2*cy-lq.y:cy,x,y)}
+  else if(C=='A'){i+=5;lineTo(num()+ox,num()+oy);lc=lq=null}else i++}
+ return subs}
+const K4=.5523;
+function shapeSubs(tag,g){const n=k=>parseFloat(g(k)||0);let P;
+ if(tag=='rect'){const x=n('x'),y=n('y'),w=n('width'),h=n('height');P=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(([a,b])=>({x:a,y:b,hi:null,ho:null}));return[{pts:P,closed:true}]}
+ if(tag=='circle'||tag=='ellipse'){const cx=n('cx'),cy=n('cy'),rx=tag=='circle'?n('r'):n('rx'),ry=tag=='circle'?n('r'):n('ry');
+  return[{closed:true,pts:[[cx+rx,cy,0,-K4*ry],[cx,cy+ry,K4*rx,0],[cx-rx,cy,0,K4*ry],[cx,cy-ry,-K4*rx,0]].map(([x,y,dx,dy])=>({x,y,hi:{x:x-dx,y:y-dy},ho:{x:x+dx,y:y+dy},sm:true}))}]}
+ if(tag=='line')return[{pts:[{x:n('x1'),y:n('y1'),hi:null,ho:null},{x:n('x2'),y:n('y2'),hi:null,ho:null}],closed:false}];
+ if(tag=='polyline'||tag=='polygon'){const v=(g('points')||'').trim().split(/[\s,]+/).map(parseFloat);P=[];for(let i=0;i+1<v.length;i+=2)P.push({x:v[i],y:v[i+1],hi:null,ho:null});return[{pts:P,closed:tag=='polygon'}]}
+ if(tag=='path')return parseD(g('d'));return[]}
+function importSvg(){let f=$('#svgf');if(!f){f=document.createElement('input');f.type='file';f.id='svgf';f.accept='.svg,image/svg+xml';f.style.display='none';f.onchange=()=>{const x=f.files[0];if(!x)return;const r=new FileReader();r.onload=()=>importSvgText(String(r.result));r.readAsText(x);f.value=''};document.body.appendChild(f)}f.click()}
+function importSvgText(txt){const doc=new DOMParser().parseFromString(txt,'image/svg+xml'),svg=doc.querySelector('svg');if(!svg){alert('This file is not a valid SVG.');return}
+ const vb=(svg.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(parseFloat),W=vb.length==4?vb[2]:parseFloat(svg.getAttribute('width'))||100,H=vb.length==4?vb[3]:parseFloat(svg.getAttribute('height'))||100,ox=vb.length==4?vb[0]:0,oy=vb.length==4?vb[1]:0;
+ const pg=SZ(S.pages[cur]),k=Math.min(pg.w*.8/W,pg.h*.8/H),dx=(pg.w-W*k)/2-ox*k,dy=(pg.h-H*k)/2-oy*k,g=uid(),out=[];
+ const colr=(v,def)=>{if(v==null||v==='')return def;v=String(v).trim();return v=='none'?'transparent':v};
+ svg.querySelectorAll('path,rect,circle,ellipse,line,polyline,polygon').forEach(n=>{const subs=shapeSubs(n.tagName.toLowerCase(),a=>n.getAttribute(a));if(!subs.length)return;
+  const fix=p=>{if(p){p.x=p.x*k+dx;p.y=p.y*k+dy}};subs.forEach(s=>s.pts.forEach(p=>{fix(p);fix(p.hi);fix(p.ho)}));
+  out.push(mkPath(subs,{fill:colr(n.getAttribute('fill'),'#000000'),stroke:colr(n.getAttribute('stroke'),'transparent'),sw:(parseFloat(n.getAttribute('stroke-width'))||0)*k,g,name:'Imported path'}))});
+ if(!out.length){alert('No paths were found in this SVG.');return}
+ S.pages[cur].els.push(...out);ms=out.length>1?out.map(e=>e.id):[];sel=out[out.length-1].id;panel();draw()}
+/* ===================== IMAGE TRACE ===================== */
+function traceCore(D,w,h,o,prog){
+ o=Object.assign({mode:'color',threshold:128,colors:8,smooth:60,detail:60,noise:20,ignoreWhite:false,whiteTol:240,enclosed:false,blur:0,outW:w,outH:h},o||{});
+ const N=w*h,P=prog||function(){};let src=D;
+ if(o.blur>0){const r=Math.min(4,Math.round(o.blur)),tmp=new Float32Array(N*3);src=new Uint8ClampedArray(D);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let a=0,b=0,c=0,n=0;for(let dx=-r;dx<=r;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const p=(y*w+xx)*4;a+=D[p];b+=D[p+1];c+=D[p+2];n++}const q=(y*w+x)*3;tmp[q]=a/n;tmp[q+1]=b/n;tmp[q+2]=c/n}
+  for(let x=0;x<w;x++)for(let y=0;y<h;y++){let a=0,b=0,c=0,n=0;for(let dy=-r;dy<=r;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;const q=(yy*w+x)*3;a+=tmp[q];b+=tmp[q+1];c+=tmp[q+2];n++}const p=(y*w+x)*4;src[p]=a/n;src[p+1]=b/n;src[p+2]=c/n}}
+ P('Preparing',.05);
+ const op=new Uint8Array(N);for(let i=0;i<N;i++)op[i]=D[i*4+3]>=128?1:0;
+ const lab=new Int16Array(N).fill(-1);let pal;
+ if(o.mode=='bw'){pal=[[0,0,0],[255,255,255]];for(let i=0;i<N;i++){if(!op[i])continue;lab[i]=(.299*src[i*4]+.587*src[i*4+1]+.114*src[i*4+2])<o.threshold?0:1}}
+ else{const hist=new Uint32Array(32768);for(let i=0;i<N;i++){if(op[i])hist[((src[i*4]>>3)<<10)|((src[i*4+1]>>3)<<5)|(src[i*4+2]>>3)]++}
+  const bins=[];for(let k=0;k<32768;k++)if(hist[k])bins.push({c:[((k>>10)<<3)|4,(((k>>5)&31)<<3)|4,((k&31)<<3)|4],n:hist[k]});
+  const K=Math.max(2,Math.min(64,Math.round(o.colors))),boxes=[bins];
+  while(boxes.length<K){let bi=-1,bs=-1,ch=0;
+   boxes.forEach((bx,i)=>{if(bx.length<2)return;const mn=[255,255,255],mx=[0,0,0];let cnt=0;bx.forEach(b=>{cnt+=b.n;for(let c=0;c<3;c++){if(b.c[c]<mn[c])mn[c]=b.c[c];if(b.c[c]>mx[c])mx[c]=b.c[c]}});const rg=[mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]],m=Math.max(rg[0],rg[1],rg[2]),sc=m*Math.sqrt(cnt);if(sc>bs){bs=sc;bi=i;ch=rg.indexOf(m)}});
+   if(bi<0||bs<=0)break;const bx=boxes[bi];bx.sort((a,b)=>a.c[ch]-b.c[ch]);let tot=0;bx.forEach(b=>tot+=b.n);let acc=0,cut=1;for(let i=0;i<bx.length-1;i++){acc+=bx[i].n;cut=i+1;if(acc>=tot/2)break}
+   boxes.splice(bi,1,bx.slice(0,cut),bx.slice(cut))}
+  pal=boxes.map(bx=>{let r=0,g=0,b=0,n=0;bx.forEach(x=>{r+=x.c[0]*x.n;g+=x.c[1]*x.n;b+=x.c[2]*x.n;n+=x.n});return n?[Math.round(r/n),Math.round(g/n),Math.round(b/n)]:[0,0,0]});
+  const cache=new Int16Array(32768).fill(-1);
+  for(let i=0;i<N;i++){if(!op[i])continue;const r=src[i*4],g=src[i*4+1],b=src[i*4+2],k=((r>>3)<<10)|((g>>3)<<5)|(b>>3);let c=cache[k];if(c<0){let bd=1e9;for(let j=0;j<pal.length;j++){const d=(pal[j][0]-r)*(pal[j][0]-r)+(pal[j][1]-g)*(pal[j][1]-g)+(pal[j][2]-b)*(pal[j][2]-b);if(d<bd){bd=d;c=j}}cache[k]=c}lab[i]=c}}
+ P('Colours ready',.3);
+ if(o.ignoreWhite){const wt=o.whiteTol,isW=i=>op[i]&&D[i*4]>=wt&&D[i*4+1]>=wt&&D[i*4+2]>=wt;
+  if(o.enclosed){for(let i=0;i<N;i++)if(isW(i))lab[i]=-1}
+  else{const st=new Int32Array(N),seen=new Uint8Array(N);let sp=0;const push=p=>{if(!seen[p]&&isW(p)){seen[p]=1;st[sp++]=p}};
+   for(let x=0;x<w;x++){push(x);push((h-1)*w+x)}for(let y=0;y<h;y++){push(y*w);push(y*w+w-1)}
+   while(sp){const p=st[--sp];lab[p]=-1;const x=p%w;if(x>0)push(p-1);if(x<w-1)push(p+1);if(p>=w)push(p-w);if(p<N-w)push(p+w)}}}
+ const cnt=new Int32Array(pal.length);for(let i=0;i<N;i++)if(lab[i]>=0)cnt[lab[i]]++;
+ let order=[];
+ if(o.mode=='bw'){if(cnt[0]>0){if(!o.ignoreWhite&&cnt[1]>0)order.push(1);order.push(0)}}
+ else{for(let j=0;j<pal.length;j++)if(cnt[j]>0)order.push(j);order.sort((a,b)=>cnt[b]-cnt[a])}
+ const rank=new Int16Array(pal.length).fill(-1);order.forEach((j,k)=>{rank[j]=k});
+ function clean(m,minA){if(minA<=1)return;const seen=new Uint8Array(N),st=new Int32Array(N);
+  for(let pass=0;pass<2;pass++){const want=pass==0?1:0;seen.fill(0);
+   for(let s0=0;s0<N;s0++){if(seen[s0]||m[s0]!=want)continue;let sp=0,n=0,touch=false;const comp=[];st[sp++]=s0;seen[s0]=1;
+    while(sp){const p=st[--sp];comp.push(p);n++;const x=p%w,y=(p-x)/w;if(x==0||y==0||x==w-1||y==h-1)touch=true;
+     if(x>0&&!seen[p-1]&&m[p-1]==want){seen[p-1]=1;st[sp++]=p-1}if(x<w-1&&!seen[p+1]&&m[p+1]==want){seen[p+1]=1;st[sp++]=p+1}
+     if(y>0&&!seen[p-w]&&m[p-w]==want){seen[p-w]=1;st[sp++]=p-w}if(y<h-1&&!seen[p+w]&&m[p+w]==want){seen[p+w]=1;st[sp++]=p+w}}
+    if(n<minA&&(pass==0||!touch))for(let q=0;q<comp.length;q++)m[comp[q]]=want?0:1}}}
+ function loops(m){const W1=w+1,out=new Uint8Array(W1*(h+1));
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(!m[y*w+x])continue;
+   if(y==0||!m[(y-1)*w+x])out[y*W1+x]|=1;if(x==w-1||!m[y*w+x+1])out[y*W1+x+1]|=2;if(y==h-1||!m[(y+1)*w+x])out[(y+1)*W1+x+1]|=4;if(x==0||!m[y*w+x-1])out[(y+1)*W1+x]|=8}
+  const DX=[1,0,-1,0],DY=[0,1,0,-1],res=[];
+  for(let v=0;v<out.length;v++){while(out[v]){let d=out[v]&1?0:out[v]&2?1:out[v]&4?2:3,cv=v,pd=-1;const pts=[];
+    while(true){const bit=1<<d;if(!(out[cv]&bit))break;out[cv]&=~bit;const cx=cv%W1,cy=(cv-cx)/W1;if(d!=pd){pts.push({x:cx,y:cy});pd=d}
+     cv=(cy+DY[d])*W1+(cx+DX[d]);let nd=-1;const c3=[(d+1)&3,d,(d+3)&3];for(let q=0;q<3;q++){if(out[cv]&(1<<c3[q])){nd=c3[q];break}}if(nd<0)break;d=nd}
+    if(pts.length>=3)res.push(pts)}}
+  return res}
+ function rdpClosed(L,tol){if(L.length<4)return L;let f=0,fd=-1;for(let i=1;i<L.length;i++){const d=(L[i].x-L[0].x)*(L[i].x-L[0].x)+(L[i].y-L[0].y)*(L[i].y-L[0].y);if(d>fd){fd=d;f=i}}
+  const a=rdp(L.slice(0,f+1),tol),b=rdp(L.slice(f).concat([L[0]]),tol);return a.slice(0,-1).concat(b.slice(0,-1))}
+ const minA=Math.round(o.noise*o.noise/10),tol=.35+(100-o.detail)/100*2.2,sm=o.smooth/100*1.25,layers=[];let nodes=0;
+ order.forEach((j,k)=>{P('Tracing layer '+(k+1)+' of '+order.length,.3+.65*k/order.length);
+  const m=new Uint8Array(N);for(let i=0;i<N;i++){const l=lab[i];if(l>=0&&rank[l]>=k)m[i]=1}
+  clean(m,minA);const subs=[];
+  loops(m).forEach(lp=>{let area=0;for(let q=0;q<lp.length;q++){const a=lp[q],b=lp[(q+1)%lp.length];area+=a.x*b.y-b.x*a.y}if(Math.abs(area)/2<Math.max(1.5,minA/2))return;
+   const pts=smoothNodes(rdpClosed(lp,tol),true,sm,70);if(pts.length<3)return;subs.push({pts,closed:true});nodes+=pts.length});
+  if(subs.length){const c=pal[j];layers.push({fill:'#'+c.map(v=>(v<16?'0':'')+v.toString(16)).join(''),subs})}});
+ const f=v=>Math.round(v*100)/100;let svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+o.outW+'" height="'+o.outH+'" viewBox="0 0 '+w+' '+h+'">';
+ layers.forEach(L=>{let d='';L.subs.forEach(s=>{const Q=s.pts;d+='M'+f(Q[0].x)+' '+f(Q[0].y);for(let i=1;i<=Q.length;i++){const a=Q[i-1],b=Q[i%Q.length];d+=(a.ho||b.hi)?'C'+f((a.ho||a).x)+' '+f((a.ho||a).y)+' '+f((b.hi||b).x)+' '+f((b.hi||b).y)+' '+f(b.x)+' '+f(b.y):'L'+f(b.x)+' '+f(b.y)}d+='Z'});svg+='<path d="'+d+'" fill="'+L.fill+'" fill-rule="evenodd"/>'});
+ svg+='</svg>';P('Done',1);return{w,h,layers,nodes,svg}}
+const traceWorkerCode=()=>'var rdp='+rdp.toString()+';var smoothNodes='+smoothNodes.toString()+';var traceCore='+traceCore.toString()+';onmessage=function(e){var d=e.data;try{var r=traceCore(new Uint8ClampedArray(d.buf),d.w,d.h,d.o,function(t,f){postMessage({id:d.id,p:t})});postMessage({id:d.id,r:r})}catch(x){postMessage({id:d.id,err:String(x&&x.message||x)})}}';
+const traceWorker=()=>new Worker(URL.createObjectURL(new Blob([traceWorkerCode()],{type:'text/javascript'})));
+const TRD={mode:'color',threshold:128,colors:8,smooth:60,detail:60,noise:20,ignoreWhite:false,whiteTol:240,enclosed:false,blur:0,maxPx:1200},TR={o:{...TRD},job:0,w:null,px:null,res:null,zo:1,zv:1};
+function trValidate(name,type,size){if(!size)return 'This file is empty.';const ext=(String(name).split('.').pop()||'').toLowerCase();if(!['png','jpg','jpeg','webp'].includes(ext)||(type&&!/^image\/(png|jpeg|webp)$/.test(type)))return 'Only PNG, JPG, JPEG or WebP pictures can be traced.';return ''}
+function trMsg(t,err){const e=$('#trs');e.textContent=t;e.style.color=err?'#fca5a5':'#cbd5e1'}
+function trOpen(){$('#tr').style.display='flex';const e=selEl();trSyncAll();
+ if(e&&e.t=='image'&&e.src&&!TR.px){fetch(U(e.src)).then(r=>r.blob()).then(b=>trLoad(b,'picture.'+((b.type.split('/')[1]||'png').replace('jpeg','jpg')))).catch(()=>trMsg('Could not open the selected picture.',1))}}
+function trClose(){clearTimeout(TR.t);if(TR.w){TR.w.terminate();TR.w=null}TR.job++;$('#tr').style.display='none'}
+function trPick(inp){const f=inp.files[0];inp.value='';if(f)trLoad(f,f.name)}
+async function trLoad(blob,name){const err=trValidate(name,blob.type,blob.size);if(err){trMsg(err,1);return}
+ let bmp;try{bmp=await createImageBitmap(blob)}catch(e){trMsg('This picture could not be read. The file may be damaged.',1);return}
+ if(TR.bmp&&TR.bmp.close)TR.bmp.close();if(TR.url)URL.revokeObjectURL(TR.url);
+ TR.bmp=bmp;TR.ow=bmp.width;TR.oh=bmp.height;TR.url=URL.createObjectURL(blob);TR.res=null;$('#trvec').innerHTML='';
+ $('#trio').innerHTML='<img src="'+TR.url+'">';$('#tro').textContent=bmp.width+' x '+bmp.height+' px, '+(blob.size/1024).toFixed(0)+' KB';
+ trPrep();trFit('o');trFit('v');trRun(0)}
+function trPrep(){if(!TR.bmp)return;const k=Math.min(1,TR.o.maxPx/Math.max(TR.ow,TR.oh)),cw=Math.max(1,Math.round(TR.ow*k)),ch=Math.max(1,Math.round(TR.oh*k)),c=document.createElement('canvas');c.width=cw;c.height=ch;const x=c.getContext('2d');x.clearRect(0,0,cw,ch);x.drawImage(TR.bmp,0,0,cw,ch);
+ const d=x.getImageData(0,0,cw,ch);TR.px={buf:d.data.buffer,w:cw,h:ch};$('#trst').textContent=k<1?'Traced at '+cw+' x '+ch+' px for speed. Your original picture is untouched and the result scales to its full size.':''}
+function trRun(delay){clearTimeout(TR.t);TR.t=setTimeout(trGo,delay==null?250:delay)}
+function trGo(){if(!TR.px)return;const id=++TR.job;if(TR.w)TR.w.terminate();let w;try{w=TR.w=traceWorker()}catch(e){trMsg('Tracing could not start: '+e.message,1);return}
+ trMsg('Tracing...');w.onmessage=e=>{const d=e.data;if(d.id!==TR.job)return;if(d.err){trMsg('Tracing failed: '+d.err,1)}else if(d.p){trMsg(d.p+'...')}else{TR.res=d.r;trShow()}};
+ w.onerror=e=>{if(id==TR.job)trMsg('Tracing failed: '+(e.message||'unknown error'),1)};
+ w.postMessage({id,buf:TR.px.buf.slice(0),w:TR.px.w,h:TR.px.h,o:Object.assign({},TR.o,{outW:TR.ow,outH:TR.oh})})}
+function trShow(){const r=TR.res;$('#trvec').innerHTML=r.layers.length?r.svg:'';const big=r.nodes>50000;trMsg(!r.layers.length?'Nothing to trace with these settings (try a different threshold or turn off Ignore white).':r.layers.length+' colour layer'+(r.layers.length>1?'s':'')+', '+r.nodes+' points.'+(big?' That is a lot of points and may make the editor slow: lower Detail or Colours, or raise Noise removal.':' Ready to insert or export.'),!r.layers.length||big)}
+function trSync(k){const q=$('#tr').querySelectorAll?$('#tr').querySelectorAll('[data-tr="'+k+'"]'):[];q.forEach(el=>{const v=TR.o[k];if(el.type=='checkbox')el.checked=!!v;else if(el.type=='radio')el.checked=el.value==v;else el.value=v});if(k=='mode'){$('#trw_bw').style.display=TR.o.mode=='bw'?'':'none';$('#trw_c').style.display=TR.o.mode=='bw'?'none':''}}
+function trSyncAll(){Object.keys(TRD).forEach(trSync)}
+function trReset(){TR.o={...TRD};trSyncAll();trPrep();trRun(0)}
+function trToggle(){$('#tr').classList.toggle('showv')}
+function trApplyZ(){$('#trio').style.zoom=TR.zo;$('#trvec').style.zoom=TR.zv}
+function trZ(p,f){const sync=$('#trsync').checked;const z=f==0?1:(p=='o'?TR.zo:TR.zv)*f;if(sync||p=='o')TR.zo=z;if(sync||p=='v')TR.zv=z;trApplyZ()}
+function trFit(p){if(!TR.ow)return;const box=$(p=='o'?'#trvo':'#trvv'),z=Math.min((box.clientWidth-24)/TR.ow,(box.clientHeight-24)/TR.oh)||1;if($('#trsync').checked){TR.zo=TR.zv=z}else if(p=='o')TR.zo=z;else TR.zv=z;trApplyZ()}
+function trExport(){if(!TR.res||!TR.res.layers.length){trMsg('Nothing to export yet.',1);return}saveText('image-traced.svg',TR.res.svg)}
+function trInsert(){const r=TR.res;if(!r||!r.layers.length){trMsg('Nothing to insert yet.',1);return}
+ if(r.nodes>50000&&!confirm('This trace has '+r.nodes+' points and may make the editor slow. Insert it anyway? (Tip: lower Detail or Colours, or raise Noise removal first.)'))return;
+ const pg=SZ(S.pages[cur]),k=Math.min(pg.w*.8/r.w,pg.h*.8/r.h),dx=(pg.w-r.w*k)/2,dy=(pg.h-r.h*k)/2,g=uid(),T=p=>p&&{x:p.x*k+dx,y:p.y*k+dy};
+ const out=r.layers.map((L,i)=>mkPath(L.subs.map(s=>({closed:true,pts:s.pts.map(p=>({x:p.x*k+dx,y:p.y*k+dy,sm:p.sm,hi:T(p.hi),ho:T(p.ho)}))})),{fill:L.fill,stroke:'transparent',sw:0,fillRule:'evenodd',g,name:'Traced '+(i+1)}));
+ S.pages[cur].els.push(...out);ms=out.length>1?out.map(e=>e.id):[];sel=out[out.length-1].id;trClose();panel();draw()}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.tr;if(!k)return;const t=e.target.type;TR.o[k]=t=='checkbox'?e.target.checked:(t=='range'||t=='number')?+e.target.value:e.target.value;trSync(k);if(k=='maxPx')trPrep();trRun()});
+const tgrid=$('#tr');if(tgrid&&tgrid.addEventListener)tgrid.addEventListener('dragover',e=>e.preventDefault());
+if(tgrid&&tgrid.addEventListener)tgrid.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)trLoad(f,f.name)});
+/* ===================== IMAGE FOLDER IMPORT + DATA ENTRY ===================== */
+const fileUrl=p=>{p=String(p);const q=encodeURI(p.replace(/\\/g,'/')).replace(/#/g,'%23').replace(/\?/g,'%3F');return /^\\\\/.test(p)?'file:'+q:'file:///'+q.replace(/^\/+/,'')};
+const baseOf=p=>String(p||'').split(/[\\/]/).pop();
+const LZ=new Set(),MISS=new Set(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function lazyFiles(q){if(!q||!q.files||!q.files.length||!api.readImage||LZ.has(q.id))return;
+ const have=new Set((q.imgs||[]).map(m=>m.p)),todo=q.files.filter(f=>!have.has(f)&&!MISS.has(f));if(!todo.length)return;
+ LZ.add(q.id);(async()=>{try{for(const f of todo){const d=await api.readImage(f);if(!d){MISS.add(f);continue}
+   const c=S.products.find(x=>x.id==q.id);if(!c)break;if(!(c.files||[]).includes(f)||c.imgs.some(m=>m.p===f))continue;c.imgs.push({s:reg(d),iw:0,ih:0,p:f})}
+  await measureAll()}catch(e){}LZ.delete(q.id);draw();if(tab=='prods')panel()})()}
+async function attachAll(){const ids=new Set(S.pages.filter(p=>!isT(p)).flatMap(p=>(p.ids||[]).filter(Boolean)));let miss=0;
+ for(const q of S.products.filter(x=>ids.has(x.id)&&x.files&&x.files.length&&api.readImage)){while(LZ.has(q.id))await sleep(25);
+  for(const f of q.files){if(q.imgs.some(m=>m.p===f))continue;if(MISS.has(f)){miss++;continue}const d=await api.readImage(f);if(!d){MISS.add(f);miss++;continue}q.imgs.push({s:reg(d),iw:0,ih:0,p:f})}}
+ return miss}
+const pendingHint=q=>q.files&&q.files.length>q.imgs.length?`<p class="hint">${q.files.length-q.imgs.length} picture file(s) will load when the catalogue needs them: ${esc(q.files.filter(f=>!q.imgs.some(m=>m.p===f)).map(baseOf).join(', '))}</p>`:'';
+const niceName=f=>String(f).replace(/\.[^.]+$/,'').replace(/_+/g,' ').trim();
+async function importFolder(){const r=await api.pickFolder();if(!r)return;
+ if(r.error){alert('That folder could not be read: '+r.error);return}
+ if(!r.files.length){alert('No pictures (JPG, JPEG, PNG, WebP, GIF or BMP) were found in that folder.');return}
+ const used=new Set(S.products.flatMap(q=>[...(q.files||[]),...q.imgs.map(m=>m.p).filter(Boolean)]));let add=0,skip=0,first=null;
+ r.files.forEach(f=>{if(used.has(f.path)){skip++;return}used.add(f.path);const q={id:uid(),name:niceName(f.name),cat:'',desc:'',variants:'',imgs:[],files:[f.path],imgScale:100,auto:true,done:false};S.products.push(q);add++;if(!first)first=q.id});
+ if(!add){alert('All '+skip+' pictures in that folder are already in your list. Nothing was added.');return}
+ selP=first;tab='prods';touchSave();deOpen(first,add+' new rows added from the folder'+(skip?' ('+skip+' already in the list were skipped)':'')+'. Look at each picture and fill in the details.')}
+const DE={id:null,pic:0,only:false};
+const deRows=()=>S.products.filter(q=>!DE.only||!q.done||q.id==DE.id);
+const deQ=()=>S.products.find(x=>x.id==DE.id);
+function touchSave(){clearTimeout(tm);tm=setTimeout(persist,1500);clearTimeout(ct);ct=setTimeout(commit,350)}
+function flushSave(){clearTimeout(tm);persist();clearTimeout(ct);commit()}
+function deMsg(t){const e=$('#des');if(e)e.textContent=t}
+function deSrcs(q){if(q.files&&q.files.length)return q.files.map(f=>({url:fileUrl(f),path:f}));return(q.imgs||[]).map(m=>({url:UV(m.s),path:''}))}
+function deOpen(id,msg){const el=$('#de');el.style.display='flex';DE.only=false;const o=$('#deonly');if(o)o.checked=false;
+ if(id&&S.products.find(q=>q.id==id))DE.id=id;else if(!deQ())DE.id=(S.products[0]||{}).id||null;DE.pic=0;
+ const cats=[...new Set(['Whole','Powder','Blend','Seeds','Herb','Combo Packs',...S.products.map(q=>q.cat).filter(Boolean)])];$('#decat').innerHTML=cats.map(c=>'<option value="'+esc(c)+'">').join('');
+ deTable();deShow();if(msg)deMsg(msg)}
+function deClose(){flushSave();$('#de').style.display='none';panel();draw()}
+function deShow(){const q=deQ(),rows=deRows(),i=rows.findIndex(x=>x.id==DE.id);
+ if(!q){deMsg('');$('#deimg').innerHTML='<div class="deno">There are no rows yet. Close this view and use Import image folder or Import Excel/CSV.</div>';$('#defm').innerHTML='';$('#depi').textContent='';return}
+ deMsg('Row '+(i+1)+' of '+rows.length+(DE.only?' (unfinished only)':''));
+ $('#defm').innerHTML=`<label>Name</label><input data-de="name" value="${esc(q.name)}"><label>Category</label><input data-de="cat" list="decat" value="${esc(q.cat)}"><label>Description</label><textarea data-de="desc">${esc(q.desc)}</textarea><label>Sizes and prices (one per line)</label><textarea data-de="variants" style="height:96px">${esc(q.variants)}</textarea><label class="rd"><input type="checkbox" data-de="done" ${q.done?'checked':''}> This row is finished</label><label>Picture file</label><div class="hint" style="word-break:break-all;margin:0">${esc((q.files&&q.files[0])||'(picture is stored inside the project)')}</div>`;
+ const S2=deSrcs(q);if(DE.pic>=S2.length)DE.pic=0;
+ if(!S2.length){$('#deimg').innerHTML='<div class="deno">This row has no picture yet. Add one from the Products tab.</div>';$('#depi').textContent=''}
+ else{$('#deimg').innerHTML='<img id="deim" src="'+S2[DE.pic].url+'" onerror="deErr()" onload="deLoaded(this)">';$('#depi').textContent=(S2.length>1?'Picture '+(DE.pic+1)+' of '+S2.length+'   ':'')+baseOf(S2[DE.pic].path)}}
+function deErr(){const q=deQ(),s=q?deSrcs(q)[DE.pic]:null;$('#deimg').innerHTML='<div class="deno"><b>This picture could not be opened.</b><br>'+esc(s&&s.path||'')+'<br>The file may have been moved, renamed or deleted. Put it back in that place and open this row again. You can still type the details.</div>'}
+function deLoaded(im){const q=deQ(),s=q?deSrcs(q)[DE.pic]:null;$('#depi').textContent=((q&&deSrcs(q).length>1)?'Picture '+(DE.pic+1)+' of '+deSrcs(q).length+'   ':'')+baseOf(s&&s.path)+'   '+im.naturalWidth+' x '+im.naturalHeight+' px'}
+function deZ(f){const im=$('#deim');if(!im||!im.naturalWidth)return;if(f==0){im.style.maxWidth='';im.style.maxHeight='';im.style.width='';return}
+ const c=im.clientWidth/im.naturalWidth;im.style.maxWidth='none';im.style.maxHeight='none';im.style.width=Math.round(im.naturalWidth*c*f)+'px'}
+function dePic(d){const q=deQ();if(!q)return;const n=deSrcs(q).length;if(n<2)return;DE.pic=(DE.pic+d+n)%n;deShow()}
+function deTable(){const rows=deRows();$('#detb').innerHTML='<table><thead><tr><th>#</th><th>Done</th><th>Picture file</th><th>Name</th><th>Category</th><th>Sizes and prices</th></tr></thead><tbody>'+rows.map(q=>`<tr data-r="${q.id}" class="${q.id==DE.id?'on':''}"><td>${S.products.indexOf(q)+1}</td><td>${q.done?'&#10003;':''}</td><td>${esc(baseOf((q.files&&q.files[0])||(q.imgs[0]&&q.imgs[0].p)||''))}</td><td>${esc(q.name)}</td><td>${esc(q.cat)}</td><td>${esc((q.variants||'').replace(/\n/g,' | '))}</td></tr>`).join('')+'</tbody></table>'}
+function deSelRow(){const t=$('#detb');if(!t.querySelectorAll)return;t.querySelectorAll('tr.on').forEach(r=>r.classList.remove('on'));const r=t.querySelector('tr[data-r="'+DE.id+'"]');if(r){r.classList.add('on');if(r.scrollIntoView)r.scrollIntoView({block:'nearest'})}}
+function deCell(q){const t=$('#detb');if(!t.querySelector)return;const r=t.querySelector('tr[data-r="'+q.id+'"]');if(!r||!r.children[3])return;
+ r.children[1].textContent=q.done?'\u2713':'';r.children[3].textContent=q.name;r.children[4].textContent=q.cat;r.children[5].textContent=(q.variants||'').replace(/\n/g,' | ')}
+function deMove(d){const rows=deRows(),i=rows.findIndex(x=>x.id==DE.id),j=i+d;
+ if(j<0||j>=rows.length){deMsg(d>0?'This is the last row.':'This is the first row.');return false}
+ flushSave();DE.id=rows[j].id;DE.pic=0;deShow();deSelRow();return true}
+const deNext=()=>deMove(1),dePrev=()=>deMove(-1);
+function deDone(){const q=deQ();if(!q)return;const rows=deRows(),i=rows.findIndex(x=>x.id==q.id);q.done=true;
+ const nxt=rows.slice(i+1).concat(rows.slice(0,i)).find(x=>!x.done);flushSave();
+ if(!nxt){deTable();deShow();deMsg('All '+S.products.length+' rows are finished. Well done!');return}
+ DE.id=nxt.id;DE.pic=0;if(DE.only)deTable();else deCell(q);deShow();deSelRow()}
+function deFilter(){DE.only=$('#deonly').checked;deTable();deShow();deSelRow()}
+async function exportSheet(){if(!S.products.length){alert('There are no products to export yet.');return}
+ if(!api.exportSheet){alert('Please update the app to use Export Excel.');return}
+ const r=await api.exportSheet(S.products.map(q=>({name:q.name,cat:q.cat,desc:q.desc,variants:q.variants,pics:(q.files&&q.files.length?q.files:q.imgs.map(m=>m.p).filter(Boolean))})));
+ if(r)alert('Saved: '+r+'\nPicture columns hold the full file paths. Pictures stored only inside the project have no path and are left blank.')}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.de;if(!k)return;const q=deQ();if(!q)return;
+ q[k]=e.target.type=='checkbox'?!!e.target.checked:e.target.value;if(k=='name')q.auto=false;touchSave();deCell(q)});
+{const tb=$('#detb');if(tb&&tb.addEventListener)tb.addEventListener('click',e=>{const r=e.target.closest&&e.target.closest('tr[data-r]');if(!r)return;flushSave();DE.id=r.dataset.r;DE.pic=0;deShow();deSelRow()})}
+const bgDef=(B,z,m)=>{m=m||B.bgFit||'cover';const iw=B.bgiw,ih=B.bgih;if(!(iw>0)||m=='stretch'||m=='100% 100%')return{x:0,y:0,w:z.w,h:z.h};const k=(m=='contain'?Math.min:Math.max)(z.w/iw,z.h/ih),w=iw*k,h=ih*k;return{x:r1((z.w-w)/2),y:r1((z.h-h)/2),w:r1(w),h:r1(h)}};
+function bgEl(B,z,ro){if(!B.bgImg)return'';const f=B.bgf||bgDef(B,z);return `<div class="el bgimg" ${!ro&&sel=='bg'&&B===S.pages[cur]?'data-id="bg"':''} style="left:${f.x}mm;top:${f.y}mm;width:${f.w}mm;height:${f.h}mm"><img src="${UV(B.bgImg)}" style="left:0;top:0;width:100%;height:100%"></div>`}
+function bgFit(m){const p=S.pages[cur];p.bgf=Object.assign(bgDef(p,SZ(p),m),{id:'bg',t:'bg'});p.bgFit=m;panel();draw()}
+function bgEditOn(){const p=S.pages[cur];if(!p.bgImg)return;if(!p.bgf)p.bgf=Object.assign(bgDef(p,SZ(p)),{id:'bg',t:'bg'});sel='bg';ms=[];cropId=null;panel();draw()}
+const bgDone=()=>{sel=null;ms=[];panel();draw()};
+function bgRemove(){const p=S.pages[cur];p.bgImg='';p.bgf=null;if(sel=='bg')sel=null;panel();draw()}
+function bgPanel(){return `<b>Background picture</b><p class="hint">Drag the picture to move it. Drag a corner to resize it. Scroll the mouse wheel to zoom.</p><div class="sm"><button onclick="bgFit('cover')">Fill page</button><button onclick="bgFit('contain')">Fit inside</button><button onclick="bgFit('stretch')">Stretch</button></div>`+['x','y','w','h'].map(k=>F(k.toUpperCase()+' (mm)','el.'+k,'number')).join('')+`<p><button onclick="bgDone()">Done</button> <button onclick="img(S.pages[cur],'bgImg')">Change picture</button> <button onclick="bgRemove()">Remove</button></p>`}
+cvs.addEventListener('wheel',ev=>{const o=selEl();if(!o||o.t!='bg')return;ev.preventDefault();const r=cvs.getBoundingClientRect(),px=(ev.clientX-r.left)/(PX*Z),py=(ev.clientY-r.top)/(PX*Z),f=ev.deltaY<0?1.06:1/1.06;if(o.w*f<10)return;o.x=r1(px-(px-o.x)*f);o.y=r1(py-(py-o.y)*f);o.w=r1(o.w*f);o.h=r1(o.h*f);draw()},{passive:false});
+const bbox=L=>{const x0=Math.min(...L.map(e=>e.x)),y0=Math.min(...L.map(e=>e.y)),x1=Math.max(...L.map(e=>e.x+e.w)),y1=Math.max(...L.map(e=>e.y+e.h));return{x:x0,y:y0,w:x1-x0,h:y1-y0}};
+function expand(id){const e=findEl(id);return e&&e.g?allEls().filter(x=>x.g==e.g).map(x=>x.id):[id]}
+const group=()=>{const L=SL().filter(e=>!e.lk&&e.t!='bg');if(L.length<2)return;const g=uid();L.forEach(e=>e.g=g);panel();draw()};
+const ungroup=()=>{const gs=new Set(SL().map(e=>e.g).filter(Boolean));allEls().forEach(e=>{if(gs.has(e.g))delete e.g});panel();draw()};
+const gBtn=()=>{const L=SL();return L.length>1&&!L.every(e=>e.g&&e.g==L[0].g)?'<button onclick="group()">Group</button>':L.some(e=>e.g)?'<button onclick="ungroup()">Ungroup</button>':''};
+function gScale(ev,hd){const L=SL().filter(e=>!e.lk),b=bbox(L),P=['r','bw','sw','r1','r2','r3','r4'],O=L.map(e=>({x:e.x,y:e.y,w:e.w,h:e.h,s:e.size,...Object.fromEntries(P.map(p=>[p,e[p]]))})),sx=ev.clientX,ax=hd.includes('w')?b.x+b.w:b.x,ay=hd.includes('n')?b.y+b.h:b.y;
+ const mvf=m=>{const dx=(m.clientX-sx)/(PX*Z),k=Math.max(.1,(b.w+(hd.includes('w')?-dx:dx))/b.w);
+  L.forEach((e,i)=>{const o=O[i];e.x=r1(ax+(o.x-ax)*k);e.y=r1(ay+(o.y-ay)*k);e.w=r1(o.w*k);e.h=r1(o.h*k);if(o.s)e.size=Math.max(3,r1(o.s*k));P.forEach(p=>{if(o[p])e[p]=r1(o[p]*k)})});draw()};
+ const up=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',up);panel()};addEventListener('mousemove',mvf);addEventListener('mouseup',up)}
+function msOv(){const L=SL(),b=bbox(L);return L.map(e=>`<div class="ov" style="left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;outline-width:calc(var(--hs)/10)"></div>`).join('')+`<div class="ov ovg" style="left:${b.x}mm;top:${b.y}mm;width:${b.w}mm;height:${b.h}mm;outline-style:dashed">${['nw','ne','se','sw'].map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')}</div>`}
+function tbar(){const tb=$('#tb'),cv=$('#canvas'),o=cv.querySelector&&cv.querySelector(multi()?'.ovg':'.ov'),e=selEl();
+ if(!o||!e||cropId||e.t=='bg'||!o.getBoundingClientRect){tb.style.display='none';return}
+ const r=o.getBoundingClientRect(),im=!multi()&&(e.t=='image'||e.t=='logo');
+ tb.innerHTML=(im?'<button onclick="cropOn()">Crop</button><button onclick="fitImg(0)">Fit box to image</button>':'')+gBtn()+'<button onclick="dup()">Duplicate</button><button onclick="delEl()">Delete</button>';
+ tb.style.display='flex';tb.style.left=Math.max(8,r.left+r.width/2-(tb.offsetWidth||120)/2)+'px';tb.style.top=(r.top>120?r.top-44:r.bottom+12)+'px'}
+function multiPanel(){const pt=S.pages[cur].type=='ptpl';return `<b>${SL().length} selected</b><p class="hint">Shift+click, or drag a box over empty space, to select more. Drag any selected item to move them all together.</p>`
+ +`<b>Align to each other</b><div class="sm"><button onclick="alm('l')">Left</button><button onclick="alm('c')">Centre</button><button onclick="alm('r')">Right</button><button onclick="alm('t')">Top</button><button onclick="alm('m')">Middle</button><button onclick="alm('b')">Bottom</button></div>`
+ +`<b>Spacing</b><div class="sm"><button onclick="dist('h')">Equal gaps across</button><button onclick="dist('v')">Equal gaps down</button></div><label>Exact gap (mm)</label><input type="number" min="0" step="0.5" value="${gapV}" onchange="gapV=+this.value"><div class="sm"><button onclick="gapSet('h')">Apply across</button><button onclick="gapSet('v')">Apply down</button></div>`
+ +`<b>Same size</b><div class="sm"><button onclick="matchSize('w')">Same width</button><button onclick="matchSize('h')">Same height</button></div>`
+ +`<b>Arrange</b><div class="sm"><button onclick="zo('front')">Bring to front</button><button onclick="zo('fwd')">Forward</button><button onclick="zo('bwd')">Backward</button><button onclick="zo('back')">Send to back</button></div>`
+ +`<b>Group</b><div class="sm"><button onclick="group()">Group</button><button onclick="ungroup()">Ungroup</button></div><p class="hint">Grouped items are selected and moved together. Drag a corner of the dashed box to resize everything at once. Alt+click picks one item inside a group.</p>`+`<p><button onclick="dup()">Duplicate</button> ${pt?'<button onclick="dupNext()">Duplicate for next product</button> ':''}<button onclick="delEl()">Delete</button></p>`}
+function alm(a){const L=SL().filter(e=>!e.lk),b=bbox(L);L.forEach(e=>{if(a=='l')e.x=b.x;if(a=='c')e.x=b.x+(b.w-e.w)/2;if(a=='r')e.x=b.x+b.w-e.w;if(a=='t')e.y=b.y;if(a=='m')e.y=b.y+(b.h-e.h)/2;if(a=='b')e.y=b.y+b.h-e.h;e.x=r1(e.x);e.y=r1(e.y)});draw();panel()}
+function dist(d){const L=SL().filter(e=>!e.lk),X=d=='h'?'x':'y',W=d=='h'?'w':'h';if(L.length<3)return;L.sort((a,b)=>a[X]-b[X]);const b=bbox(L),g=((d=='h'?b.w:b.h)-L.reduce((t,e)=>t+e[W],0))/(L.length-1);let p=b[X];L.forEach(e=>{e[X]=r1(p);p+=e[W]+g});draw();panel()}
+function gapSet(d){const L=SL().filter(e=>!e.lk),X=d=='h'?'x':'y',W=d=='h'?'w':'h';L.sort((a,b)=>a[X]-b[X]);let p=L[0][X];L.forEach(e=>{e[X]=r1(p);p+=e[W]+gapV});draw();panel()}
+function matchSize(k){const o=selEl();SL().forEach(e=>{if(e===o||e.lk)return;const im=e.t=='image'||e.t=='logo',tx=e.t=='text'||e.t=='pf';
+ if(k=='w'){const r=e.h/e.w;e.w=o.w;if(tx)e.hug=0;if(im)e.h=r1(o.w*r)}else if(!tx){const r=e.w/e.h;e.h=o.h;if(im)e.w=r1(o.h*r)}});draw();panel()}
+function dup(next){const L=SL().filter(e=>e.t!='bg');if(!L.length)return;const b=bbox(L),W=SZ(S.pages[cur]).w,out=[],gm={};
+ L.forEach(e=>{const c=JSON.parse(JSON.stringify(e));c.id=uid();if(c.g){gm[c.g]=gm[c.g]||uid();c.g=gm[c.g]}
+  if(next){if(b.x+b.w*2+5<=W)c.x=r1(e.x+b.w+5);else c.y=r1(e.y+b.h+5);if(c.t=='slot')c.i=(e.i||1)+1;else if(bnd(c))c.n=(e.n||1)+1}else{c.x=r1(e.x+5);c.y=r1(e.y+5)}
+  (S.master.includes(e)?S.master:S.pages[cur].els).push(c);out.push(c.id)});
+ ms=out.length>1?out:[];sel=out[out.length-1];panel();draw()}
+const dupNext=()=>dup(1);
+function marquee(ev,add){const r=cvs.getBoundingClientRect(),X=c=>(c-r.left)/(PX*Z),Y=c=>(c-r.top)/(PX*Z),x0=X(ev.clientX),y0=Y(ev.clientY),bx=document.createElement('div');bx.className='mq';cvs.appendChild(bx);let Q={x:x0,y:y0,w:0,h:0};
+ const mvf=m=>{const x=Math.min(x0,X(m.clientX)),y=Math.min(y0,Y(m.clientY));Q={x,y,w:Math.abs(X(m.clientX)-x0),h:Math.abs(Y(m.clientY)-y0)};bx.style.cssText=`left:${x}mm;top:${y}mm;width:${Q.w}mm;height:${Q.h}mm`};
+ const up=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',up);bx.remove();
+  const hit=Q.w<.8&&Q.h<.8?[]:allEls().filter(e=>!e.lk&&!e.hid&&e.x<Q.x+Q.w&&e.x+e.w>Q.x&&e.y<Q.y+Q.h&&e.y+e.h>Q.y).map(e=>e.id);
+  const hx=[...new Set(hit.flatMap(expand))];ms=add?[...new Set([...cms(),...hx])]:hx;sel=ms[ms.length-1]||null;if(ms.length==1)ms=[];cropId=null;panel();draw()};
+ addEventListener('mousemove',mvf);addEventListener('mouseup',up)}
+const fontClean=a=>[...new Set(a.map(x=>String(x).replace(/^"+|"+$/g,'').trim()).filter(Boolean))].sort((x,y)=>x.localeCompare(y));
+const nz=t=>String(t).toLowerCase().replace(/[^a-z0-9\u00c0-\uffff]+/g,'');
+let fpSp=0,fpTried=0;
+function fpRender(q,live){const ws=String(q||'').toLowerCase().split(/\s+/).map(nz).filter(Boolean);
+ fpC=fpL.filter(f=>{const n=nz(fname(f));return ws.every(w=>n.includes(w))});fpI=-1;
+ $('#fpv').innerHTML=fpC.length?fpC.map((f,i)=>`<div class="fi ${f==fpO?'cur':''}" data-i="${i}" style="font-family:${fnt(f)}">${esc(fname(f))}</div>`).join(''):'<div class="fe">No fonts match. Try fewer letters.</div>';
+ const c=$('#fpc');if(c)c.textContent=fpC.length+' fonts';
+ if(live&&ws.length&&fpC.length){fpI=0;fpHi(0,1)}}
+function fpOpen(k,sp){if(fpK!==null){const same=fpK===k;fpClose(0);if(same)return}
+ fpK=k;fpSp=sp;fpO=get(k);fpL=[...(sp?['@h','@b']:[]),...fonts];$('#fpl').style.display='flex';$('#fps').value='';fpRender('');$('#fps').focus();
+ const c=$('#fpv').querySelector('.cur');if(c)c.scrollIntoView({block:'center'});if(!fpTried){fpTried=1;fpRefresh()}}
+async function fpRefresh(){let add=[];try{if(window.queryLocalFonts)add=(await window.queryLocalFonts()).map(f=>f.family)}catch{}
+ try{add=add.concat(await api.fonts())}catch{}
+ fonts=fontClean([...fonts,...add]);fpL=[...(fpSp?['@h','@b']:[]),...fonts];if(fpK!==null)fpRender($('#fps').value)}
+function fpClose(ok){if(fpK===null)return;if(!ok)set(fpK,fpO);fpK=null;$('#fpl').style.display='none';panel();draw()}
+function fpHi(i,ns){[...$('#fpv').children].forEach((c,j)=>c.classList.toggle('on',j==i));const c=$('#fpv').children[i];if(c&&!ns)c.scrollIntoView({block:'nearest'});set(fpK,fpC[i]);draw()}
+function fpKey(e){if(e.key=='Escape'){fpClose(0);return}if(e.key=='Enter'){if(fpC[fpI]!==undefined){set(fpK,fpC[fpI]);fpClose(1)}return}
+ if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();fpI=e.key=='ArrowDown'?Math.min(fpC.length-1,fpI+1):Math.max(0,fpI-1);if(fpC.length)fpHi(fpI)}}
+let mx=0,my=0;
+$('#fpv').addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+$('#fpv').addEventListener('mouseover',e=>{const n=e.target.closest('.fi');if(n&&+n.dataset.i!==fpI){fpI=+n.dataset.i;fpHi(fpI,1)}});
+$('#fpv').addEventListener('scroll',()=>{const n=document.elementFromPoint(mx,my),f=n&&n.closest&&n.closest('.fi');if(f&&+f.dataset.i!==fpI){fpI=+f.dataset.i;fpHi(fpI,1)}});
+$('#fpv').addEventListener('mouseup',()=>$('#fps').focus());
+$('#fpv').addEventListener('click',e=>{const n=e.target.closest('.fi');if(n){set(fpK,fpC[+n.dataset.i]);fpClose(1)}});
+document.addEventListener('mousedown',e=>{if(fpK!==null&&!e.target.closest('#fpl')&&!e.target.closest('.fpb'))fpClose(0)});
+addEventListener('resize',draw);
+(async()=>{try{fonts=fontClean(await api.fonts())}catch{}
+ const im=api.loadImgs?await api.loadImgs():null;if(im)Object.assign(IMG,JSON.parse(im));
+ const j=await api.load();if(j)load(j);else S.pages=defaults();
+ mig();lastSize={...S.size};
+ const used=new Set(JSON.stringify(S).match(/i:[a-z0-9]+/g)||[]);let ch=!im&&Object.keys(IMG).length>0;for(const k in IMG)if(!used.has(k)){delete IMG[k];ch=true}if(ch)imgDirty=true;
+ await measureAll();commit();panel();draw();persist()})();
+</script></body></html>
