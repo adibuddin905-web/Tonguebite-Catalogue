@@ -272,8 +272,8 @@ function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k
  if(tab=='layers'){const p=S.pages[cur],row=e=>`<div class="row ly ${cms().includes(e.id)?'on':''}" onclick="pick('${e.id}',event)"><span>${esc(lab(e))}</span><span class="sm"><button onclick="event.stopPropagation();lay('${e.id}',1)">&#9650;</button><button onclick="event.stopPropagation();lay('${e.id}',-1)">&#9660;</button><button onclick="event.stopPropagation();tg('${e.id}','hid')">${e.hid?'Show':'Hide'}</button><button onclick="event.stopPropagation();tg('${e.id}','lk')">${e.lk?'Unlock':'Lock'}</button></span></div>`;
   h+=`<b>Layers on this page (top first)</b>`+([...p.els].reverse().map(row).join('')||'<p class="hint">No layers yet.</p>')+(p.type=='card'?'':`<b>Shared on every page</b>`+([...S.master].reverse().map(row).join('')||'<p class="hint">Nothing shared.</p>'))}
  if(tab=='prods'){const q=selProd();if(q&&!q.imgScale)q.imgScale=100;if(q)lazyFiles(q);
-  h+=`<button onclick="addProd()">+ Add product</button> <button onclick="imp()">Import Excel/CSV</button> <button onclick="api.sample&&api.sample()">Excel template</button> <button onclick="importFolder()">Import image folder</button> <button onclick="deOpen(selP)">Data entry view</button> <button onclick="exportSheet()">Export Excel</button><p class="hint">Columns: name, category, description, variants (separate sizes with | ). Picture columns: image, image2, image3. Type a file name (picture in the same folder as the Excel file), or select the cell and press Ctrl+K to pick the picture. If left empty, pictures named like the product are found automatically. Same product name = updated, not duplicated.</p>`
-  +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel();draw()">${esc(p.name||'(new)')}</div>`).join('')
+  h+=`<button onclick="addProd()">+ Add product</button> <button onclick="imp()">Import Excel/CSV</button> <button onclick="api.sample&&api.sample()">Excel template</button> <button onclick="importFolder()">Import image folder</button> <button onclick="deOpen(selP)">Data entry view</button> <button onclick="exportSheet()">Export Excel</button> <button onclick="delAllProds()" style="color:#b91c1c;border-color:#fca5a5">Remove all products</button><p class="hint">Columns: name, category, description, variants (separate sizes with | ). Picture columns: image, image2, image3. Type a file name (picture in the same folder as the Excel file), or select the cell and press Ctrl+K to pick the picture. If left empty, pictures named like the product are found automatically. Same product name = updated, not duplicated.</p>`
+  +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel();draw()">${esc(prodLabel(p))}</div>`).join('')
   +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size inside its frame (%)','prod.imgScale','range','min="20" max="100"')+pendingHint(q)+'<b>Images</b>'+q.imgs.map((m,i)=>`<div class="row ly"><span>Image ${i+1}</span><span class="sm"><button onclick="pset(${i})">Replace</button><button onclick="pdel(${i})">Remove</button></span></div>`).join('')+`<p><button onclick="pset(${q.imgs.length})">+ Add image</button> <button onclick="delProd()">Delete product</button></p><p class="hint">Add several images, then use Product image slots in the card template and pick Image 1, 2, 3...</p>`:'<p class="hint">Excel/CSV columns: name, category, description, variants</p>')}
  if(tab=='brand')h+=`<p><button onclick="img(S.brand,'logo')">Choose logo</button></p>`
   +S.brand.pal.map((c,i)=>F('Colour '+(i+1),'pal.'+i,'color')+(i>2&&i==S.brand.pal.length-1?`<button onclick="S.brand.pal.pop();panel();draw()">Remove colour ${i+1}</button>`:'')).join('')
@@ -287,7 +287,7 @@ function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.
  if(cd)h+=F('Card width (mm)','page.w','number','min="20"')+F('Card height (mm)','page.h','number','min="20"')+F('Card corner radius (mm)','page.cr','number','min="0"')+'<p class="hint">This single card design is used for every product on every product page.</p><p><button onclick="resetCard()">Reset card design</button></p>';
  if(p.type=='prod'){const pts=S.pages.filter(x=>x.type=='ptpl'),T=tplOf(p),sl=slotsOf(p);
   h+=F('Page heading (fills {title})','page.title')+SEL('Page template','page.tpl',pts.map(t=>[t.id,t.name]))+F('Hide shared header/footer on this page','page.noMaster','checkbox')+'<b>Products on this page</b>'
-  +sl.map(x=>`<label>Slot ${x.i}</label><select onchange="setSlot(${x.i},this.value)"><option value="">(empty)</option>${S.products.map(q=>`<option value="${q.id}" ${q.id==(p.ids||[])[x.i-1]?'selected':''}>${esc(q.name)}</option>`).join('')}</select>`).join('')
+  +sl.map(x=>`<label>Slot ${x.i}</label><select onchange="setSlot(${x.i},this.value)"><option value="">(empty)</option>${S.products.map(q=>`<option value="${q.id}" ${q.id==(p.ids||[])[x.i-1]?'selected':''}>${esc(prodLabel(q))}</option>`).join('')}</select>`).join('')
   +'<p><button onclick="autoFill()">Fill empty slots</button> <button onclick="autoPages()">Add pages for all unused products</button></p><p class="hint">The look of this page comes from its template. Open the template in the Pages tab to change the design for every page that uses it.</p>'}
  else{h+=C('Background colour','page.bg')+`<b>Background picture</b><p><button onclick="img(S.pages[cur],'bgImg')">${p.bgImg?'Change picture':'Choose picture'}</button>${p.bgImg?' <button onclick="bgRemove()">Remove</button>':''}</p>`+(p.bgImg?`<p><button onclick="bgEditOn()">Adjust with mouse</button></p><div class="sm"><button onclick="bgFit('cover')">Fill page</button><button onclick="bgFit('contain')">Fit inside</button><button onclick="bgFit('stretch')">Stretch</button></div>`:'');
   if(p.type=='free')h+=F('Hide shared header/footer on this page','page.noMaster','checkbox');
@@ -360,19 +360,22 @@ function addProd(){const p={id:uid(),name:'New product',cat:'',desc:'',variants:
 function delProd(){S.products=S.products.filter(p=>p.id!=selP);S.pages.forEach(p=>p.ids&&(p.ids=p.ids.filter(i=>i!=selP)));selP=null;panel();draw()}
 async function imp(){const r=await api.sheet();if(!r)return;
  if(!r.length){alert('No rows were found in that file. The first row must hold column names: name, category, description, variants.');return}
- let add=0,upd=0,wi=0,auto=0,skip=0,firstId=null;
+ let add=0,upd=0,wi=0,auto=0,skip=0,same=0,firstId=null;
+ const before=new Set(S.products.map(p=>p.id)),taken=new Set(),hasPics=p=>(p.files&&p.files.length)||p.imgs.length;
  r.forEach(o=>{const g=(...ns)=>{for(const n of ns){const k=Object.keys(o).find(x=>x.trim().toLowerCase()==n);if(k&&String(o[k]).trim())return String(o[k]).trim()}return''};
   const name=g('name','product','product name'),files=o.__files||[];
   const cat=g('category','cat'),desc=g('description','desc'),variants=g('variants','sizes','sizes & prices','size').replace(/\s*[|;]\s*/g,'\n'),imgs=(o.__imgs||[]).map((d,i)=>({s:reg(d),iw:0,ih:0,p:files[i]}));
-  let q=(files.length?S.products.find(p=>p.files&&files.some(f=>p.files.includes(f))):null)||(name?S.products.find(p=>nz(p.name)==nz(name)):null);
+  /* Same picture file = same product. Same NAME alone is not enough: two packagings (two pictures) with one name stay two products. */
+  let q=files.length?S.products.find(p=>p.files&&files.some(f=>p.files.includes(f))):null;
+  if(!q&&name)q=S.products.find(p=>before.has(p.id)&&!taken.has(p.id)&&nz(p.name)==nz(name)&&(!files.length||!hasPics(p)))||null;
   if(!q&&!name){skip++;return}
-  if(q){upd++;if(name&&q.name!==name){q.name=name;q.auto=false}if(cat)q.cat=cat;if(desc)q.desc=desc;if(variants)q.variants=variants;
+  if(q){taken.add(q.id);upd++;if(name&&q.name!==name){q.name=name;q.auto=false}if(cat)q.cat=cat;if(desc)q.desc=desc;if(variants)q.variants=variants;
    if(imgs.length)q.imgs=imgs;else if(files.length)q.imgs=q.imgs.filter(m=>files.includes(m.p));if(files.length)q.files=files}
-  else{add++;q={id:uid(),name,cat,desc,variants,imgs,files,imgScale:100};S.products.push(q)}
+  else{if(S.products.some(p=>nz(p.name)==nz(name)))same++;add++;q={id:uid(),name,cat,desc,variants,imgs,files,imgScale:100};S.products.push(q)}
   if(imgs.length||files.length)wi++;if(o.__auto)auto++;if(!firstId)firstId=q.id});
  if(!firstId){alert('No product names were found. Check that the first row has a column called name.');return}
  await measureAll();selP=firstId;tab='prods';panel();draw();
- alert(add+' added, '+upd+' updated'+(wi?', '+wi+' with pictures':'')+(auto?' ('+auto+' matched by file name)':'')+'.'+(skip?' '+skip+' rows without a name were skipped.':'')+(wi?'':' Pictures can be added from the Images list of each product.'))}
+ alert(add+' added, '+upd+' updated'+(wi?', '+wi+' with pictures':'')+(auto?' ('+auto+' matched by file name)':'')+'.'+(same?' '+same+' have the same name as another product but a different picture, so they were kept as separate products.':'')+(skip?' '+skip+' rows without a name were skipped.':'')+(wi?'':' Pictures can be added from the Images list of each product.'))}
 function lowRes(){const out=[];[...S.pages.filter(p=>!isT(p)).flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&!e.hid){const iw=e.t=='logo'?S.brand.liw:e.iw;if(!(iw>0))return;const c=crop(e),d=Math.round(iw/(c.cw*e.w/25.4));if(d<150)out.push(d)}});return out}
 async function pdf(){const miss=await attachAll();if(miss&&!confirm(miss+' picture file(s) listed in your products could not be found, so those pictures will be missing from the PDF. Export anyway?'))return;await measureAll();const lr=lowRes();
  if(lr.length&&!confirm(lr.length+' picture(s) have low resolution (lowest '+Math.min(...lr)+' dpi at the size used) and may look pixelated in print. Use a bigger original photo or make it smaller on the page. Export anyway?'))return;
@@ -694,6 +697,10 @@ async function attachAll(){const ids=new Set(S.pages.filter(p=>!isT(p)).flatMap(
  for(const q of S.products.filter(x=>ids.has(x.id)&&x.files&&x.files.length&&api.readImage)){while(LZ.has(q.id))await sleep(25);
   for(const f of q.files){if(q.imgs.some(m=>m.p===f))continue;if(MISS.has(f)){miss++;continue}const d=await api.readImage(f);if(!d){MISS.add(f);miss++;continue}q.imgs.push({s:reg(d),iw:0,ih:0,p:f})}}
  return miss}
+function delAllProds(){const n=S.products.length;if(!n){alert('There are no products to remove.');return}
+ if(!confirm('Remove all '+n+' products from the list? They will also be taken off the product pages. Picture files on your computer are not deleted. You can undo this with Ctrl+Z.'))return;
+ S.products=[];S.pages.forEach(p=>{if(p.ids)p.ids=[]});selP=null;DE.id=null;DE.pic=0;panel();draw();touchSave()}
+const prodLabel=q=>{const nm=q.name||'(new)';if(S.products.filter(p=>nz(p.name)==nz(q.name)).length<2)return nm;const f=(q.files&&q.files[0])||(q.imgs[0]&&q.imgs[0].p)||'';return nm+' ('+(f?baseOf(f):'#'+(S.products.indexOf(q)+1))+')'};
 const pendingHint=q=>q.files&&q.files.length>q.imgs.length?`<p class="hint">${q.files.length-q.imgs.length} picture file(s) will load when the catalogue needs them: ${esc(q.files.filter(f=>!q.imgs.some(m=>m.p===f)).map(baseOf).join(', '))}</p>`:'';
 const niceName=f=>String(f).replace(/\.[^.]+$/,'').replace(/_+/g,' ').trim();
 async function importFolder(){const r=await api.pickFolder();if(!r)return;
