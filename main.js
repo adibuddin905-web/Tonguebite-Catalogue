@@ -57,6 +57,7 @@ function readRows(X, ws) {
 }
 function attachPictures(rows, dir) {
   let files = null;
+  const usedAuto = new Set();   // a picture found by name goes to one row only
   const lazy = rows.length > 25;   // big sheets: keep picture paths only, load pictures when needed
   return rows.map(o => {
     const imgs = [], paths = []; let auto = false;
@@ -75,8 +76,9 @@ function attachPictures(rows, dir) {
         files = files || fs.readdirSync(dir).filter(f => IMG_EXT.includes(path.extname(f).slice(1).toLowerCase()));
         const key = nzName(name);
         files.filter(f => { const b = nzName(path.basename(f, path.extname(f))); return b === key || (b.startsWith(key) && /^[0-9]+$/.test(b.slice(key.length))); })
+          .filter(f => !usedAuto.has(f))
           .sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).slice(0, 6)
-          .forEach(f => { add(path.join(dir, f)); auto = true; });
+          .forEach(f => { usedAuto.add(f); add(path.join(dir, f)); auto = true; });
       } catch (e) {}
     }
     return { ...o, __imgs: imgs, __files: paths, __auto: auto };
