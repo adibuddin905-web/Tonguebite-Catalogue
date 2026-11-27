@@ -215,20 +215,36 @@ function crop(e){const lg=e.t=='logo',iw=lg?S.brand.liw:e.iw,ih=lg?S.brand.lih:e
  if(e.cw)return{cx:e.cx,cy:e.cy,cw:e.cw,ch:e.ch};
  if(!(iw>0&&ih>0))return{cx:0,cy:0,cw:1,ch:1};
  const s=(lg?Math.min:Math.max)(e.w/iw,e.h/ih),cw=iw*s/e.w,ch=ih*s/e.h;return{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch}}
+/* ---- product image: real crop + box that always hugs the picture ---- */
+const r6=v=>Math.round(v*1e6)/1e6;
+function pimgProd(e){const p=S.pages[cur];return p&&p.type=='ptpl'?(S.products[(e.n||1)-1]||null):(selProd()||S.products[0]||null)}
+function pimgGeom(e,q){const m=q&&q.imgs&&q.imgs[(e.idx||1)-1];if(!m||!m.s||!(m.iw>0))return null;
+ const sc=(q.imgScale||100)/100,kl=e.kl||0,kt=e.kt||0,kr=e.kr||0,kb=e.kb||0,vw=m.iw*(1-kl-kr),vh=m.ih*(1-kt-kb),cover=e.fit=='cover';
+ if(!(vw>0&&vh>0))return null;
+ const s=(cover?Math.max:Math.min)(e.w/vw,e.h/vh)*sc,dw=cover?e.w:vw*s,dh=cover?e.h:vh*s;
+ return{m,sc,kl,kt,kr,kb,vw,vh,s,cover,dw,dh,dx:(e.w-dw)/2,dy:(e.h-dh)/2}}
+function visBox(e){if(e.t=='pimg'){const g=pimgGeom(e,pimgProd(e));if(g)return{x:e.x+g.dx,y:e.y+g.dy,w:g.dw,h:g.dh}}return{x:e.x,y:e.y,w:e.w,h:e.h}}
+function pimgFit(){const e=selEl();if(!e||e.t!='pimg')return;const g=pimgGeom(e,pimgProd(e));if(!g)return;
+ if(!g.cover){const cx=e.x+e.w/2,cy=e.y+e.h/2,fw=g.dw/g.sc,fh=g.dh/g.sc;e.w=r3(fw);e.h=r3(fh);e.x=r3(cx-fw/2);e.y=r3(cy-fh/2)}draw();panel()}
+function pimgReset(){const e=selEl();if(!e||e.t!='pimg')return;e.kl=e.kt=e.kr=e.kb=0;pimgFit();draw();panel()}
+function alp(a){const L=SL().filter(e=>!e.lk);if(!L.length)return;const V=L.map(visBox),x0=Math.min(...V.map(v=>v.x)),y0=Math.min(...V.map(v=>v.y)),x1=Math.max(...V.map(v=>v.x+v.w)),y1=Math.max(...V.map(v=>v.y+v.h)),z=SZ(S.pages[cur]);let dx=0,dy=0;
+ if(a=='l')dx=-x0;if(a=='c')dx=(z.w-(x1-x0))/2-x0;if(a=='r')dx=z.w-x1;if(a=='t')dy=-y0;if(a=='m')dy=(z.h-(y1-y0))/2-y0;if(a=='b')dy=z.h-y1;
+ L.forEach(e=>{e.x=r1(e.x+dx);e.y=r1(e.y+dy)});draw();panel()}
 function elHTML(e,q,ro){if(e.hid)return'';if(e.t=='path')return pathHTML(e,ro);const lg=e.t=='logo',im=e.t=='image'||lg,tx=e.t=='text'||e.t=='pf';
  const rs=[e.r1,e.r2,e.r3,e.r4].map(v=>(v??e.r??0)+'mm').join(' ');let elr=rs,st='',inner='';
  if(e.t=='rect')st+=`background:${col(e.bg)};`;
  if(tx){const v=e.t=='pf'?String((q||SAMPLE)[e.f]??''):tk(e.text);st+=`font:${e.bold?700:400} ${e.size}pt ${fnt(e.font)};color:${col(e.color)};text-align:${e.align||'left'};${e.t=='text'&&e.hug?'white-space:pre;':''}`;inner=esc(v).replace(/\n/g,'<br>')}
  if(im){const s=lg?S.brand.logo:e.src;if(s){const c=crop(e);inner=`<img src="${UV(s)}" style="left:${c.cx*100}%;top:${c.cy*100}%;width:${c.cw*100}%;height:${c.ch*100}%">`}else inner=`<div class="ph">${lg?'Logo':'Image'}</div>`}
  if(e.t=='pimg'){if(q&&q.files&&q.imgs&&q.imgs.length<q.files.length)lazyFiles(q);const m=q&&q.imgs&&q.imgs[(e.idx||1)-1];
-  if(m&&m.s){dims(m);const sc=(q.imgScale||100)/100;
-   if(e.fit=='cover'||!(m.iw>0)){inner=`<img src="${UV(m.s)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
+  if(m&&m.s){dims(m);const sc=(q.imgScale||100)/100,g=(e.kl||e.kt||e.kr||e.kb)?pimgGeom(e,q):null;
+   if(g){const FW=m.iw*g.s,FH=m.ih*g.s,lf=(g.cover?(e.w-g.vw*g.s)/2:0)-g.kl*FW,tp=(g.cover?(e.h-g.vh*g.s)/2:0)-g.kt*FH;inner=`<div style="position:absolute;left:${r3(g.dx)}mm;top:${r3(g.dy)}mm;width:${r3(g.dw)}mm;height:${r3(g.dh)}mm;overflow:hidden;border-radius:${g.cover?'0mm':rs}"><img src="${UV(m.s)}" style="left:${r3(lf)}mm;top:${r3(tp)}mm;width:${r3(FW)}mm;height:${r3(FH)}mm"></div>`;if(!g.cover)elr='0mm'}
+   else if(e.fit=='cover'||!(m.iw>0)){inner=`<img src="${UV(m.s)}" style="left:0;top:0;width:100%;height:100%;object-fit:cover;transform:scale(${sc})">`}
    else{const a=m.iw/m.ih;let w=e.w,h=w/a;if(h>e.h){h=e.h;w=h*a}w*=sc;h*=sc;inner=`<img src="${UV(m.s)}" style="left:${r1((e.w-w)/2)}mm;top:${r1((e.h-h)/2)}mm;width:${r1(w)}mm;height:${r1(h)}mm;border-radius:${rs}">`;elr='0mm'}}
   else inner=`<div class="ph">Product image ${e.idx||1}</div>`}
  st=`left:${e.x}mm;top:${e.y}mm;width:${tx&&e.t=='text'&&e.hug?'max-content':e.w+'mm'};height:${tx?'auto':e.h+'mm'};border-radius:${elr};`+(!tx&&e.bw>0?`border:${e.bw}mm solid ${col(e.bc||'@1')};`:'')+st;
  return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="${st}">${inner}</div>`}
-function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;let h=`<div class="ov${cm?' crop':''}" style="left:${o.x}mm;top:${o.y}mm;width:${o.w}mm;height:${o.h}mm">`;
- if(cm){const c=crop(o),ix=c.cx*o.w,iy=c.cy*o.h,iw=c.cw*o.w,ih=c.ch*o.h,src=o.t=='logo'?S.brand.logo:o.src;
+function overlay(o){if(!o||o.hid)return'';const cm=cropId==o.id;const V=visBox(o);let h=`<div class="ov${cm?' crop':''}" style="left:${V.x}mm;top:${V.y}mm;width:${V.w}mm;height:${V.h}mm">`;
+ if(cm&&o.t!='pimg'){const c=crop(o),ix=c.cx*o.w,iy=c.cy*o.h,iw=c.cw*o.w,ih=c.ch*o.h,src=o.t=='logo'?S.brand.logo:o.src;
   h+=`<img class="dim" src="${UV(src)}" style="left:${ix}mm;top:${iy}mm;width:${iw}mm;height:${ih}mm;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${-ix}mm ${-iy}mm,${o.w-ix}mm ${-iy}mm,${o.w-ix}mm ${o.h-iy}mm,${-ix}mm ${o.h-iy}mm,${-ix}mm ${-iy}mm)">`}
  return h+(o.t=='text'||o.t=='pf'?['nw','ne','e','se','sw','w']:(o.t=='image'||o.t=='logo'||o.t=='bg')&&!cm?['nw','ne','se','sw']:['nw','n','ne','e','se','s','sw','w']).map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')+'</div>'}
 
@@ -306,7 +322,7 @@ function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.
   if(e.t=='rect')h+=C('Fill colour','el.bg');
   if(e.t=='image')h+=`<p><button onclick="img(selEl())">Choose image</button> <button onclick="trOpen()">Trace this image</button></p>`;
   if(e.t=='logo')h+='<p class="hint">The logo comes from the Brand tab.</p>';
-  if(e.t=='pimg')h+=SEL('Which product image','el.idx',[[1,'Image 1'],[2,'Image 2'],[3,'Image 3'],[4,'Image 4'],[5,'Image 5'],[6,'Image 6']],1)+SEL('Image fit','el.fit',[['contain','Whole image'],['cover','Fill frame (crop)']])+'<p class="hint">Corner radius below rounds every product image. Per-product size is in the Products tab.</p>';
+  if(e.t=='pimg')h+=SEL('Which product image','el.idx',[[1,'Image 1'],[2,'Image 2'],[3,'Image 3'],[4,'Image 4'],[5,'Image 5'],[6,'Image 6']],1)+SEL('Image fit','el.fit',[['contain','Whole image'],['cover','Fill frame (crop)']])+'<p class="hint">Corner radius below rounds every product image. Per-product size is in the Products tab.</p>'+`<b>Crop</b><div class="sm">${cropId==e.id?'<button onclick="cropDone()">Done</button>':'<button onclick="cropOn()">Crop with mouse</button>'}<button onclick="pimgFit()">Fit box to image</button><button onclick="pimgReset()">Reset crop</button></div><p class="hint">Drag a side handle to crop that side: the picture stays where it is. Drag a corner to make the picture bigger or smaller. The blue box always matches the picture. Double-click the picture to crop with the corners too.</p>`;
   if(im)h+=`<b>Crop</b><div class="sm">${cropId==e.id?'<button onclick="cropDone()">Done</button>':'<button onclick="cropOn()">Crop with mouse</button>'}<button onclick="zoomImg(1.1)">Zoom +</button><button onclick="zoomImg(1/1.1)">Zoom -</button><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button></div><p class="hint">Resize with the corner handles: the picture and its box always scale together. Use Crop (or double-click) to cut parts away.</p>`;
   if(!tx&&e.t!='slot'&&e.t!='path')h+=F('Corner radius - all corners (mm)','el.r','number','min="0"')+'<label>Round only some corners</label><div class="sm"><button onclick="rcSet(\'top\')">Top</button><button onclick="rcSet(\'bottom\')">Bottom</button><button onclick="rcSet(\'left\')">Left</button><button onclick="rcSet(\'right\')">Right</button><button onclick="rcSet(\'all\')">All</button><button onclick="rcSet(\'none\')">None</button></div><label>Each corner (mm)</label><div class="g2">'+[['r1','Top-left'],['r2','Top-right'],['r4','Bottom-left'],['r3','Bottom-right']].map(([k,n])=>F(n,'el.'+k,'number','min="0" placeholder="'+(e.r||0)+'"')).join('')+'</div>';
   if(e.t=='rect'||im)h+=C('Border colour','el.bc')+F('Border size (mm)','el.bw','number','min="0" step="0.5"');
@@ -347,7 +363,7 @@ function resetCard(){if(!confirm('Reset the card design to the default?'))return
 function addEl(t,f){const tx=t=='text'||t=='pf',e={id:uid(),t,x:10,y:10,w:tx?60:t=='slot'?70:50,h:tx?10:t=='slot'?100:40,...(t=='text'?{text:'New text',hug:1,size:16,color:'@1',font:'@b',align:'left'}:t=='pf'?{f,size:10,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:t=='pimg'?{fit:'contain',r:0,idx:S.pages[cur].els.filter(x=>x.t=='pimg').length+1}:t=='slot'?{i:S.pages[cur].els.filter(x=>x.t=='slot').length+1,w:70,h:100}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;ms=[];panel();draw()}
 const delEl=()=>{const ids=cms();S.pages[cur].els=S.pages[cur].els.filter(e=>!ids.includes(e.id));S.master=S.master.filter(e=>!ids.includes(e.id));sel=null;ms=[];cropId=null;panel();draw()};
 function toggleAll(on){const e=selEl(),p=S.pages[cur];if(!e)return;if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
-function al(a){const e=selEl(),z=SZ(S.pages[cur]);if(a=='l')e.x=0;if(a=='c')e.x=(z.w-e.w)/2;if(a=='r')e.x=z.w-e.w;if(a=='t')e.y=0;if(a=='m')e.y=(z.h-e.h)/2;if(a=='b')e.y=z.h-e.h;e.x=r1(e.x);e.y=r1(e.y);draw();panel()}
+function al(a){alp(a)}
 function zo(m,id){const E=(id?[findEl(id)]:SL()).filter(Boolean);
  [S.master,S.pages[cur].els].forEach(a=>{const sub=a.filter(e=>E.includes(e));if(!sub.length)return;const i0=a.indexOf(sub[0]),i1=a.indexOf(sub[sub.length-1]);sub.forEach(e=>a.splice(a.indexOf(e),1));
   a.splice(m=='front'?a.length:m=='back'?0:m=='fwd'?Math.min(a.length,i1-sub.length+2):Math.max(0,i0-1),0,...sub)});panel();draw()}
@@ -357,7 +373,7 @@ const pick=(id,ev)=>{cropId=null;if(ev&&ev.shiftKey){const c=cms();ms=c.includes
 const cropOn=()=>{cropId=sel;panel();draw()},cropDone=()=>{cropId=null;panel();draw()};
 function rcSet(m){const o=selEl(),v=o.r1??o.r2??o.r3??o.r4??o.r??0,n=v>0?v:5,mp={top:[1,1,0,0],bottom:[0,0,1,1],left:[1,0,0,1],right:[0,1,1,0],all:[1,1,1,1],none:[0,0,0,0]}[m];['r1','r2','r3','r4'].forEach((k,i)=>o[k]=mp[i]?n:0);o.r=0;panel();draw()}
 function zoomImg(f){const o=selEl(),c=crop(o);Object.assign(o,{cx:.5-(.5-c.cx)*f,cy:.5-(.5-c.cy)*f,cw:c.cw*f,ch:c.ch*f});draw()}
-function fitImg(fill){const o=selEl(),lg=o.t=='logo',iw=lg?S.brand.liw:o.iw,ih=lg?S.brand.lih:o.ih;if(!(iw>0))return;
+function fitImg(fill){const o=selEl();if(o&&o.t=='pimg'){fill?pimgReset():pimgFit();return}const lg=o.t=='logo',iw=lg?S.brand.liw:o.iw,ih=lg?S.brand.lih:o.ih;if(!(iw>0))return;
  if(fill){const s=Math.max(o.w/iw,o.h/ih),cw=iw*s/o.w,ch=ih*s/o.h;Object.assign(o,{cx:(1-cw)/2,cy:(1-ch)/2,cw,ch})}else{o.h=r1(o.w*ih/iw);o.cw=0}
  draw();panel()}
 async function img(o,k='src'){const d=await api.img();if(!d)return;const first=k=='src'&&!o.src;o[k]=reg(d);if(k=='src'){o.iw=0;o.cw=0}if(k=='logo')S.brand.liw=0;if(k=='bgImg'){o.bgiw=0;o.bgf=null}
@@ -417,13 +433,23 @@ cvs.addEventListener('mousedown',ev=>{
  if(ev.shiftKey&&!hd){pick(o.id,ev);ev.preventDefault();return}
  let grp=!hd&&multi()&&cms().includes(o.id);
  if(!grp){if(sel!=o.id)cropId=null;sel=o.id;const gm=hd||ev.altKey||o.t=='bg'?[o.id]:expand(o.id);ms=gm.length>1?gm:[];grp=!hd&&multi()}ev.preventDefault();
- const now=Date.now();if(!hd&&!grp&&(o.t=='image'||o.t=='logo')&&lastClk.id==o.id&&now-lastClk.t<450){cropId=o.id;lastClk={id:0,t:0}}else lastClk={id:o.id,t:now};
- const sx=ev.clientX,sy=ev.clientY,O={x:o.x,y:o.y,w:o.w,h:o.h},isImg=o.t=='image'||o.t=='logo',isTx=o.t=='text'||o.t=='pf',sz0=o.size,c0=isImg?crop(o):null,pg=SZ(S.pages[cur]),GL=grp?SL().filter(e=>!e.lk):[],GO=GL.map(e=>({x:e.x,y:e.y}));
+ const now=Date.now();if(!hd&&!grp&&(o.t=='image'||o.t=='logo'||o.t=='pimg')&&lastClk.id==o.id&&now-lastClk.t<450){cropId=o.id;lastClk={id:0,t:0}}else lastClk={id:o.id,t:now};
+ const sx=ev.clientX,sy=ev.clientY,O={x:o.x,y:o.y,w:o.w,h:o.h},isImg=o.t=='image'||o.t=='logo',isTx=o.t=='text'||o.t=='pf',sz0=o.size,c0=isImg?crop(o):null,G0=hd&&o.t=='pimg'?pimgGeom(o,pimgProd(o)):null,pg=SZ(S.pages[cur]),GL=grp?SL().filter(e=>!e.lk):[],GO=GL.map(e=>({x:e.x,y:e.y}));
  const mvf=m=>{const dx=(m.clientX-sx)/(PX*Z),dy=(m.clientY-sy)/(PX*Z);
   if(o.t=='bg'){if(hd){const w=Math.max(10,O.w+(hd.includes('w')?-dx:dx)),h=w*O.h/O.w;o.w=r1(w);o.h=r1(h);o.x=r1(hd.includes('w')?O.x+O.w-w:O.x);o.y=r1(hd.includes('n')?O.y+O.h-h:O.y)}else{o.x=r1(O.x+dx);o.y=r1(O.y+dy)}}
   else if(hd&&isTx){
    if(hd.length==2){const k=Math.max(.2,(O.w+(hd.includes('w')?-dx:dx))/O.w);o.size=Math.max(4,r1(sz0*k));o.x=r1(hd.includes('w')?O.x+O.w-O.w*k:O.x);o.y=r1(hd.includes('n')?O.y+O.h-O.h*k:O.y);if(!o.hug)o.w=r1(O.w*k)}
    else{o.hug=0;const w=Math.max(8,O.w+(hd=='e'?dx:-dx));o.w=r1(w);if(hd=='w')o.x=r1(O.x+O.w-w)}}
+  else if(hd&&G0){
+   const R0={x:O.x+G0.dx,y:O.y+G0.dy,w:G0.dw,h:G0.dh},ew=G0.m.iw*G0.s,eh=G0.m.ih*G0.s,cm=hd.length==1||cropId==o.id;let nl=R0.x,nt=R0.y,nr=R0.x+R0.w,nb=R0.y+R0.h,kl=G0.kl,kt=G0.kt,kr=G0.kr,kb=G0.kb;
+   if(cm){
+    if(hd.includes('w'))kl=Math.max(0,Math.min(1-kr-.05,G0.kl+dx/ew));if(hd.includes('e'))kr=Math.max(0,Math.min(1-kl-.05,G0.kr-dx/ew));
+    if(hd.includes('n'))kt=Math.max(0,Math.min(1-kb-.05,G0.kt+dy/eh));if(hd.includes('s'))kb=Math.max(0,Math.min(1-kt-.05,G0.kb-dy/eh));
+    nl=R0.x+(kl-G0.kl)*ew;nr=R0.x+R0.w-(kr-G0.kr)*ew;nt=R0.y+(kt-G0.kt)*eh;nb=R0.y+R0.h-(kb-G0.kb)*eh}
+   else{const k=Math.max(.05,(R0.w+(hd.includes('w')?-dx:dx))/R0.w,(R0.h+(hd.includes('n')?-dy:dy))/R0.h),nw=R0.w*k,nh=R0.h*k;
+    nl=hd.includes('w')?R0.x+R0.w-nw:R0.x;nt=hd.includes('n')?R0.y+R0.h-nh:R0.y;nr=nl+nw;nb=nt+nh}
+   const fw=(nr-nl)/(G0.cover?1:G0.sc),fh=(nb-nt)/(G0.cover?1:G0.sc),cx=(nl+nr)/2,cy=(nt+nb)/2;
+   Object.assign(o,{x:r3(cx-fw/2),y:r3(cy-fh/2),w:r3(fw),h:r3(fh),kl:r6(kl),kt:r6(kt),kr:r6(kr),kb:r6(kb)})}
   else if(hd){let x=O.x,y=O.y,w=O.w,h=O.h;
    if(hd.includes('e'))w=O.w+dx;if(hd.includes('s'))h=O.h+dy;if(hd.includes('w')){w=O.w-dx;x=O.x+dx}if(hd.includes('n')){h=O.h-dy;y=O.y+dy}
    if(w<3){if(hd.includes('w'))x-=3-w;w=3}if(h<3){if(hd.includes('n'))y-=3-h;h=3}
@@ -432,12 +458,12 @@ cvs.addEventListener('mousedown',ev=>{
    Object.assign(o,{x:r1(x),y:r1(y),w:r1(w),h:r1(h)});
    if(isImg&&!uni)Object.assign(o,{cx:(c0.cx*O.w-(o.x-O.x))/o.w,cy:(c0.cy*O.h-(o.y-O.y))/o.h,cw:c0.cw*O.w/o.w,ch:c0.ch*O.h/o.h})}
   else if(grp){GL.forEach((e,i)=>{e.x=r1(GO[i].x+dx);e.y=r1(GO[i].y+dy)})}
-  else if(cropId==o.id){let cx=c0.cx+dx/o.w,cy=c0.cy+dy/o.h;if(c0.cw>=1)cx=Math.min(0,Math.max(1-c0.cw,cx));if(c0.ch>=1)cy=Math.min(0,Math.max(1-c0.ch,cy));Object.assign(o,{cx,cy,cw:c0.cw,ch:c0.ch})}
+  else if(cropId==o.id&&isImg){let cx=c0.cx+dx/o.w,cy=c0.cy+dy/o.h;if(c0.cw>=1)cx=Math.min(0,Math.max(1-c0.cw,cx));if(c0.ch>=1)cy=Math.min(0,Math.max(1-c0.ch,cy));Object.assign(o,{cx,cy,cw:c0.cw,ch:c0.ch})}
   else{let x=O.x+dx,y=O.y+dy;for(const t of[0,(pg.w-O.w)/2,pg.w-O.w])if(Math.abs(x-t)<1.2)x=t;for(const t of[0,(pg.h-O.h)/2,pg.h-O.h])if(Math.abs(y-t)<1.2)y=t;o.x=r1(x);o.y=r1(y)}
   draw()};
  const up=()=>{removeEventListener('mousemove',mvf);removeEventListener('mouseup',up);panel()};
  addEventListener('mousemove',mvf);addEventListener('mouseup',up);panel();draw()});
-cvs.addEventListener('dblclick',ev=>{const el=ev.target.closest('[data-id]'),o=el&&findEl(el.dataset.id);if(o&&!o.lk&&(o.t=='image'||o.t=='logo')){sel=o.id;cropId=o.id;panel();draw()}});
+cvs.addEventListener('dblclick',ev=>{const el=ev.target.closest('[data-id]'),o=el&&findEl(el.dataset.id);if(o&&!o.lk&&(o.t=='image'||o.t=='logo'||o.t=='pimg')){sel=o.id;cropId=o.id;panel();draw()}});
 addEventListener('keydown',ev=>{const tg=ev.target.tagName,ed=tg=='TEXTAREA'||(tg=='INPUT'&&/text|number|search/.test(ev.target.type||'text'));
  if($('#de').style.display=='flex'){if(ev.key=='Escape'){deClose();return}if(ev.altKey&&ev.key=='ArrowRight'){deNext();ev.preventDefault()}else if(ev.altKey&&ev.key=='ArrowLeft'){dePrev();ev.preventDefault()}else if((ev.ctrlKey||ev.metaKey)&&ev.key=='Enter'){deDone();ev.preventDefault()}return}
  if($('#tr').style.display=='flex'){if(ev.key=='Escape')trClose();return}
@@ -783,10 +809,11 @@ function gScale(ev,hd){const L=SL().filter(e=>!e.lk),b=bbox(L),P=['r','bw','sw',
 function msOv(){const L=SL(),b=bbox(L);return L.map(e=>`<div class="ov" style="left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm;outline-width:calc(var(--hs)/10)"></div>`).join('')+`<div class="ov ovg" style="left:${b.x}mm;top:${b.y}mm;width:${b.w}mm;height:${b.h}mm;outline-style:dashed">${['nw','ne','se','sw'].map(d=>`<i class="hd ${d}" data-h="${d}"></i>`).join('')}</div>`}
 function tbar(){const tb=$('#tb'),cv=$('#canvas'),o=cv.querySelector&&cv.querySelector(multi()?'.ovg':'.ov'),e=selEl();
  if(!o||!e||cropId||e.t=='bg'||!o.getBoundingClientRect){tb.style.display='none';return}
- const r=o.getBoundingClientRect(),im=!multi()&&(e.t=='image'||e.t=='logo');
+ const r=o.getBoundingClientRect(),im=!multi()&&(e.t=='image'||e.t=='logo'||e.t=='pimg');
  tb.innerHTML=(im?'<button onclick="cropOn()">Crop</button><button onclick="fitImg(0)">Fit box to image</button>':'')+gBtn()+'<button onclick="dup()">Duplicate</button><button onclick="delEl()">Delete</button>';
  tb.style.display='flex';tb.style.left=Math.max(8,r.left+r.width/2-(tb.offsetWidth||120)/2)+'px';tb.style.top=(r.top>120?r.top-44:r.bottom+12)+'px'}
 function multiPanel(){const pt=S.pages[cur].type=='ptpl';return `<b>${SL().length} selected</b><p class="hint">Shift+click, or drag a box over empty space, to select more. Drag any selected item to move them all together.</p>`
+ +`<b>Align on page</b><p class="hint">Moves everything selected (or the whole group) together, keeping their spacing.</p><div class="sm"><button onclick="alp('l')">Left</button><button onclick="alp('c')">Centre</button><button onclick="alp('r')">Right</button><button onclick="alp('t')">Top</button><button onclick="alp('m')">Middle</button><button onclick="alp('b')">Bottom</button></div>`
  +`<b>Align to each other</b><div class="sm"><button onclick="alm('l')">Left</button><button onclick="alm('c')">Centre</button><button onclick="alm('r')">Right</button><button onclick="alm('t')">Top</button><button onclick="alm('m')">Middle</button><button onclick="alm('b')">Bottom</button></div>`
  +`<b>Spacing</b><div class="sm"><button onclick="dist('h')">Equal gaps across</button><button onclick="dist('v')">Equal gaps down</button></div><label>Exact gap (mm)</label><input type="number" min="0" step="0.5" value="${gapV}" onchange="gapV=+this.value"><div class="sm"><button onclick="gapSet('h')">Apply across</button><button onclick="gapSet('v')">Apply down</button></div>`
  +`<b>Same size</b><div class="sm"><button onclick="matchSize('w')">Same width</button><button onclick="matchSize('h')">Same height</button></div>`
