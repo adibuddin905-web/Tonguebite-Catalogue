@@ -173,13 +173,16 @@ const root=()=>({brand:S.brand,pal:S.brand.pal,size:S.size,el:selEl()||{},page:S
 const get=k=>{const[a,b]=k.split('.');return root()[a][b]};
 const set=(k,v)=>{const[a,b]=k.split('.');root()[a][b]=v};
 const SZ=p=>p.type=='card'?{w:p.w,h:p.h}:S.size;
-const cardDef=()=>{const E=o=>({id:uid(),...o});return{name:'Product card template',type:'card',w:90,h:120,bg:'transparent',cr:3,els:[
+const cardDef=()=>{const E=o=>({id:uid(),...o});return{id:uid(),name:'Product card template',type:'card',w:90,h:120,bg:'transparent',cr:3,els:[
  E({t:'rect',x:0,y:0,w:90,h:120,bg:'#ffffff',bc:'@2',bw:.4,r:3}),E({t:'pimg',x:4,y:4,w:82,h:58,fit:'contain',r:2}),
  E({t:'pf',f:'name',x:4,y:65,w:82,h:10,size:14,color:'@1',bold:1,align:'left',font:'@h'}),
  E({t:'pf',f:'cat',x:4,y:75,w:82,h:6,size:8,color:'#666666',bold:1,align:'left',font:'@b'}),
  E({t:'pf',f:'desc',x:4,y:82,w:82,h:16,size:8,color:'#333333',align:'left',font:'@b'}),
  E({t:'pf',f:'variants',x:4,y:99,w:82,h:17,size:8,color:'#333333',align:'left',font:'@b'})]}};
 const isT=p=>p.type=='card'||p.type=='ptpl',cardPage=()=>S.pages.find(x=>x.type=='card');
+/* which card design a product uses: the product's own choice, else its page's choice, else the first card design */
+const cardFor=(q,pg)=>{const cs=S.pages.filter(x=>x.type=='card'),id=(q&&q.card)||(pg&&pg.type=='prod'&&pg.card);return cs.find(x=>x.id==id)||cs[0]};
+const cardOpts=d=>[['',d]].concat(S.pages.filter(x=>x.type=='card').map(c=>[c.id,c.name]));
 const tplOf=p=>S.pages.find(x=>x.type=='ptpl'&&x.id==p.tpl)||S.pages.find(x=>x.type=='ptpl');
 function mkTpl(name,cols,rows,nohf,n){const W=S.size.w,H=S.size.h,m=10,top=26,gw=(W-2*m)/cols,gh=(H-top-14)/rows,E=o=>({id:uid(),...o}),els=[];n=n||cols*rows;
  if(!nohf)els.push(E({t:'rect',x:0,y:0,w:W,h:20,bg:'@1'}),E({t:'text',x:m,y:4,w:W-60,h:12,text:'{title}',size:20,color:'@3',bold:1,align:'left',font:'@h'}),E({t:'logo',x:W-40,y:3,w:30,h:14,lock:1}),E({t:'text',x:m,y:H-9,w:W-2*m,h:6,text:'{web}  |  {phone}  |  {email}',size:9,color:'@1',align:'center',font:'@b'}));
@@ -190,7 +193,7 @@ function mig(){const b=S.brand;if(!b.pal)b.pal=[b.c1||'#7a1f1f',b.c2||'#e8a317',
  S.products.forEach(q=>{if(!q.imgs)q.imgs=q.img?[{s:q.img,iw:q.iw||0,ih:q.ih||0}]:[]});
  [...S.pages.flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&e.lock===undefined)e.lock=1});
  S.pages.forEach(p=>{if(p.type=='prod'&&!p.cols&&!p.tpl){const n=+p.layout||2,l=S.size.w>S.size.h;p.cols=n==1?1:n==2?(l?2:1):2;p.rows=n==1?1:n==2?(l?1:2):2}});
- if(!cardPage())S.pages.push(cardDef());
+ if(!cardPage())S.pages.push(cardDef());S.pages.forEach(p=>{if(p.type=='card'&&!p.id)p.id=uid()});
  if(!S.pages.some(p=>p.type=='ptpl')){const l=S.size.w>S.size.h;[['1 product per page',1,1],['2 products per page',l?2:1,l?1:2],['4 products per page',2,2]].forEach(a=>S.pages.push(mkTpl(...a)))}
  S.pages.forEach(p=>{if(p.type=='prod'&&!p.tpl){const c=+p.cols||1,r=+p.rows||1;let t=S.pages.find(x=>x.type=='ptpl'&&x.cc==c&&x.rr==r&&x.nh==!!p.noHF);if(!t){t=mkTpl(c+' x '+r+' products',c,r,p.noHF);S.pages.push(t)}p.tpl=t.id}})}
 
@@ -235,7 +238,7 @@ const allImgs=()=>[...S.pages.filter(p=>p.bgImg).map(p=>[p,p.bgImg,'bgiw','bgih'
 const measureAll=()=>Promise.all(allImgs().filter(([o,s,a])=>!(o[a]>0)).map(([o,s,a,b])=>new Promise(res=>{const i=new Image();i.onload=()=>{o[a]=i.naturalWidth;o[b]=i.naturalHeight;res()};i.onerror=res;i.src=U(s)})));
 const prodAt=(p,i)=>S.products.find(x=>x.id==(p.ids||[])[i-1]);
 function cardHTML(T,q,x,y,s){return `<div class="el" style="left:${r1(x)}mm;top:${r1(y)}mm;width:${T.w}mm;height:${T.h}mm;transform:scale(${s});transform-origin:0 0;border-radius:${T.cr||0}mm;background:${col(T.bg)}">${bgEl(T,{w:T.w,h:T.h},1)}${T.els.map(e=>elHTML(e,q,1)).join('')}</div>`}
-function slotHTML(e,q,ro){if(e.hid)return'';const T=cardPage(),s=Math.min(e.w/T.w,e.h/T.h);
+function slotHTML(e,q,ro){if(e.hid)return'';const T=cardFor(q,CP),s=Math.min(e.w/T.w,e.h/T.h);
  return `<div class="el" ${ro?'':`data-id="${e.id}"`} style="left:${e.x}mm;top:${e.y}mm;width:${e.w}mm;height:${e.h}mm">${q===undefined?'<div class="ph">Empty slot</div>':cardHTML(T,q,(e.w-T.w*s)/2,(e.h-T.h*s)/2,s)}${ro?'':`<span class="bdg">Product ${e.i}</span>`}</div>`}
 
 const pageHTML=p=>{CP=p;const z=SZ(p),cd=p.type=='card',pt=p.type=='ptpl',T=p.type=='prod'?tplOf(p):null,B=T||p,q0=(cd||pt)?(selProd()||S.products[0]||null):null;
@@ -274,7 +277,7 @@ function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k
  if(tab=='prods'){const q=selProd();if(q&&!q.imgScale)q.imgScale=100;if(q)lazyFiles(q);
   h+=`<button onclick="addProd()">+ Add product</button> <button onclick="imp()">Import Excel/CSV</button> <button onclick="api.sample&&api.sample()">Excel template</button> <button onclick="importFolder()">Import image folder</button> <button onclick="deOpen(selP)">Data entry view</button> <button onclick="exportSheet()">Export Excel</button> <button onclick="delAllProds()" style="color:#b91c1c;border-color:#fca5a5">Remove all products</button><p class="hint">Columns: name, category, description, variants (separate sizes with | ). Picture columns: image, image2, image3. Type a file name (picture in the same folder as the Excel file), or select the cell and press Ctrl+K to pick the picture. If left empty, pictures named like the product are found automatically. Same product name = updated, not duplicated.</p>`
   +S.products.map(p=>`<div class="row ${p.id==selP?'on':''}" onclick="selP='${p.id}';panel();draw()">${esc(prodLabel(p))}</div>`).join('')
-  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size inside its frame (%)','prod.imgScale','range','min="20" max="100"')+pendingHint(q)+'<b>Images</b>'+q.imgs.map((m,i)=>`<div class="row ly"><span>Image ${i+1}</span><span class="sm"><button onclick="pset(${i})">Replace</button><button onclick="pdel(${i})">Remove</button></span></div>`).join('')+`<p><button onclick="pset(${q.imgs.length})">+ Add image</button> <button onclick="delProd()">Delete product</button></p><p class="hint">Add several images, then use Product image slots in the card template and pick Image 1, 2, 3...</p>`:'<p class="hint">Excel/CSV columns: name, category, description, variants</p>')}
+  +(q?F('Name','prod.name')+F('Category','prod.cat')+F('Description','prod.desc','textarea')+F('Sizes & prices (one per line)','prod.variants','textarea')+F('Image size inside its frame (%)','prod.imgScale','range','min="20" max="100"')+SEL('Card design for this product','prod.card',cardOpts('Same as the page'))+pendingHint(q)+'<b>Images</b>'+q.imgs.map((m,i)=>`<div class="row ly"><span>Image ${i+1}</span><span class="sm"><button onclick="pset(${i})">Replace</button><button onclick="pdel(${i})">Remove</button></span></div>`).join('')+`<p><button onclick="pset(${q.imgs.length})">+ Add image</button> <button onclick="delProd()">Delete product</button></p><p class="hint">Add several images, then use Product image slots in the card template and pick Image 1, 2, 3...</p>`:'<p class="hint">Excel/CSV columns: name, category, description, variants</p>')}
  if(tab=='brand')h+=`<p><button onclick="img(S.brand,'logo')">Choose logo</button></p>`
   +S.brand.pal.map((c,i)=>F('Colour '+(i+1),'pal.'+i,'color')+(i>2&&i==S.brand.pal.length-1?`<button onclick="S.brand.pal.pop();panel();draw()">Remove colour ${i+1}</button>`:'')).join('')
   +`<p><button onclick="S.brand.pal.push('#888888');panel();draw()">+ Add colour</button></p>`
@@ -284,9 +287,9 @@ function L(){const T=(k,n)=>`<button class="${tab==k?'on':''}" onclick="tab='${k
 
 function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.id==cropId))cropId=null;
  let h=toolHint()+'<b>Page</b>'+F('Name','page.name');
- if(cd)h+=F('Card width (mm)','page.w','number','min="20"')+F('Card height (mm)','page.h','number','min="20"')+F('Card corner radius (mm)','page.cr','number','min="0"')+'<p class="hint">This single card design is used for every product on every product page.</p><p><button onclick="resetCard()">Reset card design</button></p>';
+ if(cd)h+=F('Card width (mm)','page.w','number','min="20"')+F('Card height (mm)','page.h','number','min="20"')+F('Card corner radius (mm)','page.cr','number','min="0"')+'<p class="hint">The first card design is the default for every product. A product page can use another card design (Card design dropdown on that page), and a single product can use its own (Products tab).</p><p><button onclick="dupTpl()">Duplicate this card design</button> <button onclick="resetCard()">Reset card design</button> <button onclick="delPg()">Delete this card design</button></p>';
  if(p.type=='prod'){const pts=S.pages.filter(x=>x.type=='ptpl'),T=tplOf(p),sl=slotsOf(p);
-  h+=F('Page heading (fills {title})','page.title')+SEL('Page template','page.tpl',pts.map(t=>[t.id,t.name]))+F('Hide shared header/footer on this page','page.noMaster','checkbox')+'<b>Products on this page</b>'
+  h+=F('Page heading (fills {title})','page.title')+SEL('Page template','page.tpl',pts.map(t=>[t.id,t.name]))+SEL('Card design','page.card',cardOpts('Default (first card design)'))+F('Hide shared header/footer on this page','page.noMaster','checkbox')+'<b>Products on this page</b>'
   +sl.map(x=>`<label>Slot ${x.i}</label><select onchange="setSlot(${x.i},this.value)"><option value="">(empty)</option>${S.products.map(q=>`<option value="${q.id}" ${q.id==(p.ids||[])[x.i-1]?'selected':''}>${esc(prodLabel(q))}</option>`).join('')}</select>`).join('')
   +'<p><button onclick="autoFill()">Fill empty slots</button> <button onclick="autoPages()">Add pages for all unused products</button></p><p class="hint">The look of this page comes from its template. Open the template in the Pages tab to change the design for every page that uses it.</p>'}
  else{h+=C('Background colour','page.bg')+`<b>Background picture</b><p><button onclick="img(S.pages[cur],'bgImg')">${p.bgImg?'Change picture':'Choose picture'}</button>${p.bgImg?' <button onclick="bgRemove()">Remove</button>':''}</p>`+(p.bgImg?`<p><button onclick="bgEditOn()">Adjust with mouse</button></p><div class="sm"><button onclick="bgFit('cover')">Fill page</button><button onclick="bgFit('contain')">Fit inside</button><button onclick="bgFit('stretch')">Stretch</button></div>`:'');
@@ -321,7 +324,7 @@ const tog=id=>{const p=S.pages[cur];p.ids=p.ids||[];const i=p.ids.indexOf(id);i<
 const tIdx=()=>{const i=S.pages.findIndex(isT);return i<0?S.pages.length:i};
 function addPg(prod){const at=Math.min(cur+1,tIdx()),p=prod?{name:'Products',type:'prod',tpl:newTpl||S.pages.find(x=>x.type=='ptpl').id,title:'Our Products',ids:[],els:[]}:{name:'Page',type:'free',bg:'@3',els:[]};S.pages.splice(at,0,p);go(at)}
 const mv=d=>{const j=cur+d;if(j<0||j>=S.pages.length||isT(S.pages[cur])||isT(S.pages[j]))return;[S.pages[cur],S.pages[j]]=[S.pages[j],S.pages[cur]];go(j)};
-const delPg=()=>{const p=S.pages[cur];if(p.type=='card')return;
+const delPg=()=>{const p=S.pages[cur];if(p.type=='card'){const o=S.pages.filter(x=>x.type=='card'&&x!=p);if(!o.length){alert('Keep at least one card design.');return}if(!confirm('Delete this card design? Pages and products using it will switch to the first card design.'))return;S.pages.forEach(x=>{if(x.card==p.id)x.card=''});S.products.forEach(q=>{if(q.card==p.id)q.card=''});S.pages.splice(cur,1);go(Math.max(0,cur-1));return}
  if(p.type=='ptpl'){const o=S.pages.filter(x=>x.type=='ptpl'&&x!=p);if(!o.length){alert('Keep at least one page template.');return}if(!confirm('Delete this template? Pages using it will switch to another template.'))return;S.pages.forEach(x=>{if(x.tpl==p.id)x.tpl=o[0].id});if(newTpl==p.id)newTpl=o[0].id;S.pages.splice(cur,1);go(Math.max(0,cur-1));return}
  if(S.pages.filter(x=>!isT(x)).length>1&&confirm('Delete this page?')){S.pages.splice(cur,1);go(Math.max(0,cur-1))}};
 const used=()=>new Set(S.pages.flatMap(p=>p.type=='prod'?(p.ids||[]).filter(Boolean):[]));
@@ -332,15 +335,15 @@ function autoPages(){const base=S.pages[cur];if(!slotsOf(base).length)return;let
  while(g++<200){const u=used(),rest=S.products.filter(q=>!u.has(q.id));if(!rest.length)break;const at=Math.min(cur+1,tIdx()),np={name:'Products',type:'prod',tpl:base.tpl,title:base.title||'Our Products',ids:[],els:[]};S.pages.splice(at,0,np);cur=at;slotsOf(np).forEach(x=>{if(rest.length)np.ids[x.i-1]=rest.shift().id})}
  sel=null;panel();draw()}
 function dupTpl(){const p=S.pages[cur];
- if(!p||p.type!='ptpl'){alert('Click a page template in the Templates list first (the ones with the square icon), then press Duplicate.');return}
- const names=new Set(S.pages.filter(x=>x.type=='ptpl').map(x=>x.name));let nm=p.name+' copy',k=2;while(names.has(nm))nm=p.name+' copy '+(k++);
+ if(!p||(p.type!='ptpl'&&p.type!='card')){alert('Click a page template or the product card template in the Templates list first, then press Duplicate.');return}
+ const names=new Set(S.pages.filter(x=>x.type==p.type).map(x=>x.name));let nm=p.name+' copy',k=2;while(names.has(nm))nm=p.name+' copy '+(k++);
  const c=JSON.parse(JSON.stringify(p)),gm={};c.id=uid();c.name=nm;delete c.cc;delete c.rr;delete c.nh;
  c.els.forEach(e=>{e.id=uid();if(e.g){gm[e.g]=gm[e.g]||uid();e.g=gm[e.g]}});
  S.pages.splice(cur+1,0,c);go(cur+1)}
 function addTpl(){const n=Math.max(1,Math.min(12,nSlots||2)),l=S.size.w>S.size.h,c=n==1?1:n==2?(l?2:1):Math.ceil(Math.sqrt(n)),t=mkTpl(n+(n==1?' product':' products')+' (custom)',c,Math.ceil(n/c),false,n);S.pages.push(t);newTpl=t.id;go(S.pages.length-1)}
 async function pset(i){const d=await api.img();if(d){selProd().imgs[i]={s:reg(d),iw:0,ih:0};await measureAll();draw();panel()}}
 const pdel=i=>{const q=selProd(),m=q.imgs[i];if(m&&m.p)q.files=(q.files||[]).filter(f=>f!==m.p);q.imgs.splice(i,1);panel();draw()};
-function resetCard(){if(!confirm('Reset the card design to the default?'))return;const i=S.pages.findIndex(p=>p.type=='card');S.pages[i]=cardDef();go(i)}
+function resetCard(){if(!confirm('Reset the card design to the default?'))return;const i=S.pages[cur]&&S.pages[cur].type=='card'?cur:S.pages.findIndex(p=>p.type=='card'),o=S.pages[i],d=cardDef();d.id=o.id||d.id;d.name=o.name;S.pages[i]=d;go(i)}
 function addEl(t,f){const tx=t=='text'||t=='pf',e={id:uid(),t,x:10,y:10,w:tx?60:t=='slot'?70:50,h:tx?10:t=='slot'?100:40,...(t=='text'?{text:'New text',hug:1,size:16,color:'@1',font:'@b',align:'left'}:t=='pf'?{f,size:10,color:'@1',font:'@b',align:'left'}:t=='rect'?{bg:'@2'}:t=='pimg'?{fit:'contain',r:0,idx:S.pages[cur].els.filter(x=>x.t=='pimg').length+1}:t=='slot'?{i:S.pages[cur].els.filter(x=>x.t=='slot').length+1,w:70,h:100}:{src:'',lock:1})};S.pages[cur].els.push(e);sel=e.id;ms=[];panel();draw()}
 const delEl=()=>{const ids=cms();S.pages[cur].els=S.pages[cur].els.filter(e=>!ids.includes(e.id));S.master=S.master.filter(e=>!ids.includes(e.id));sel=null;ms=[];cropId=null;panel();draw()};
 function toggleAll(on){const e=selEl(),p=S.pages[cur];if(!e)return;if(on){p.els=p.els.filter(x=>x!=e);S.master.push(e)}else{S.master=S.master.filter(x=>x!=e);p.els.push(e)}panel();draw()}
