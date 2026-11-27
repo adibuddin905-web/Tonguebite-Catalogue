@@ -15,7 +15,11 @@ header button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
 .side b{display:block;margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--mu)}
 .hint{color:var(--mu);font-size:12px;margin:6px 0}
 #stage{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
-#canvas{position:relative;background:#fff;box-shadow:0 4px 24px #0003}
+#canvas{position:relative;background:#fff;box-shadow:0 4px 24px #0003;flex:none;margin:auto}
+#vp{position:absolute;inset:0;overflow:auto;display:flex;padding:40vh 40vw;box-sizing:border-box}
+#vp.hand,#vp.hand *{cursor:grab!important}#vp.panning,#vp.panning *{cursor:grabbing!important}
+#zbar{position:absolute;left:68px;bottom:10px;z-index:6;display:flex;gap:6px;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:8px;padding:4px 8px;box-shadow:0 2px 10px #0002}
+#zbar button{padding:2px 9px;font-size:14px}#zbar input{width:auto;padding:0;border:0;background:none}#zbar input[type=range]{width:150px}#zbar input[type=number]{width:54px;padding:2px 4px;border:1px solid var(--bd);border-radius:6px;background:#fff}
 label{display:block;margin:8px 0 3px;font-size:11px;color:var(--mu)}
 input:not([type=checkbox]):not([type=color]),textarea,select{width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;font:inherit;background:#fff}
 textarea{height:64px}
@@ -111,7 +115,7 @@ label.rd{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;col
 <button onclick="undo()">Undo</button><button onclick="redo()">Redo</button><button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
 <button class="pri" onclick="pdf()">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
 <aside class="side ui" id="L"></aside>
-<main id="stage" class="ui"><div id="rail"><button data-t="sel" class="on" onclick="setTool('sel')" title="Select (V)">V<small>Select</small></button><button data-t="dir" onclick="setTool('dir')" title="Direct selection: move points and handles (A)">A<small>Direct</small></button><button data-t="pen" onclick="setTool('pen')" title="Pen: click for corners, click-drag for curves (P)">P<small>Pen</small></button><button data-t="add" onclick="setTool('add')" title="Add anchor point (click on a path)">+<small>Point</small></button><button data-t="del" onclick="setTool('del')" title="Delete anchor point (click on a point)">&minus;<small>Point</small></button><button data-t="conv" onclick="setTool('conv')" title="Convert anchor point (Shift+C)">&#8736;<small>Corner</small></button><button data-t="free" onclick="setTool('free')" title="Freehand: draw with the mouse or pen">~<small>Free</small></button><button onclick="trOpen()" title="Image Trace: turn a picture into vector paths">T<small>Trace</small></button></div><div id="bar"><span>Crop mode: drag the handles to crop, drag the picture to move it</span><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button><button class="pri" onclick="cropDone()">Done</button></div><div id="canvas"></div></main>
+<main id="stage" class="ui"><div id="rail"><button data-t="sel" class="on" onclick="setTool('sel')" title="Select (V)">V<small>Select</small></button><button data-t="dir" onclick="setTool('dir')" title="Direct selection: move points and handles (A)">A<small>Direct</small></button><button data-t="pen" onclick="setTool('pen')" title="Pen: click for corners, click-drag for curves (P)">P<small>Pen</small></button><button data-t="add" onclick="setTool('add')" title="Add anchor point (click on a path)">+<small>Point</small></button><button data-t="del" onclick="setTool('del')" title="Delete anchor point (click on a point)">&minus;<small>Point</small></button><button data-t="conv" onclick="setTool('conv')" title="Convert anchor point (Shift+C)">&#8736;<small>Corner</small></button><button data-t="free" onclick="setTool('free')" title="Freehand: draw with the mouse or pen">~<small>Free</small></button><button onclick="trOpen()" title="Image Trace: turn a picture into vector paths">T<small>Trace</small></button></div><div id="bar"><span>Crop mode: drag the handles to crop, drag the picture to move it</span><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button><button class="pri" onclick="cropDone()">Done</button></div><div id="vp"><div id="canvas"></div></div><div id="zbar" title="Zoom: Ctrl + / Ctrl - / Ctrl+wheel / pinch. Move: wheel, Shift+wheel, two-finger drag, Space+drag, middle-button drag. Ctrl+0 fit, Ctrl+1 100%"><button onclick="zoomBy(.8)">&minus;</button><input type="range" id="zs" min="0" max="1000" step="1" value="500" oninput="setZoom(5*Math.pow(320,this.value/1000)/100)"><button onclick="zoomBy(1.25)">+</button><input type="number" id="zp" min="5" max="1600" step="1" onchange="setZoom((+this.value||100)/100)">%<button onclick="zoomFit()">Fit</button><button onclick="setZoom(1)">100%</button></div></main>
 <aside class="side ui" id="R"></aside>
 <div id="tr" class="ui"><div class="trh"><b>Image Trace</b><span id="trs">Choose or drop a PNG, JPG or WebP picture.</span><button id="trtg" onclick="trToggle()">Before / After</button><button onclick="trClose()">Close</button></div>
 <div class="trb"><aside class="trside">
@@ -144,6 +148,7 @@ label.rd{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;col
 <div id="print"></div><style id="pgs"></style>
 <script>
 const PX=3.7795,$=s=>document.querySelector(s);
+let VZ=null,VC=1,SP=false;   /* view zoom (null = fit page), centre-next-draw flag, space-bar hand tool */
 let S={brand:{pal:['#7a1f1f','#e8a317','#fff8ec'],font:'Arial',bodyFont:'Arial',logo:'',phone:'+91-0000000000',email:'support@example.com',web:'www.example.com',fssai:'',insta:''},size:{w:210,h:297},master:[],products:[],pages:[]};
 let tool='sel',penE=null,pcur=null,fdraw=null,nsel=[],imgDirty=false,PRINT=false,dq=0,ms=[],gapV=5,H=[],hi=-1,ct,IMG={},fpK=null,fpO=null,fpC=[],fpL=[],fpI=-1,lastClk={id:0,t:0},newTpl=null,nSlots=2,cropId=null,cur=0,sel=null,selP=null,tab='pages',fonts=['Arial'],Z=1,tm,lastSize;
 const uid=()=>Math.random().toString(36).slice(2,8),r1=v=>Math.round(v*10)/10;
@@ -263,13 +268,14 @@ const pageHTML=p=>{CP=p;const z=SZ(p),cd=p.type=='card',pt=p.type=='ptpl',T=p.ty
 const raf=typeof requestAnimationFrame=='function'?requestAnimationFrame:f=>setTimeout(f,0);
 function draw(){if(dq)return;dq=1;raf(()=>{dq=0;drawNow()})}
 function persist(){if(api.saveImgs){api.save(JSON.stringify(S));if(imgDirty){imgDirty=false;api.saveImgs(JSON.stringify(IMG))}}else api.save(pack())}
-function drawNow(){const c=$('#stage'),p=S.pages[cur],z=SZ(p);
- Z=Math.max(.1,Math.min((c.clientWidth-60)/(z.w*PX),(c.clientHeight-60)/(z.h*PX)));
+function drawNow(){const c=$('#vp'),p=S.pages[cur],z=SZ(p);
+ const fz=Math.max(.05,Math.min((c.clientWidth-80)/(z.w*PX),(c.clientHeight-80)/(z.h*PX)));Z=VZ==null?fz:VZ;
  const cv=$('#canvas');cv.style.zoom=Z;cv.style.setProperty('--hs',(9/(Z*PX)).toFixed(2)+'mm');
  cv.innerHTML=pageHTML(p);
  const pe=cv.firstElementChild,g=pe&&pe.getBoundingClientRect?pe.getBoundingClientRect().width/(z.w*PX):0;
  if(g>0)cv.querySelectorAll('[data-id]').forEach(n=>{const e=findEl(n.dataset.id);if(e&&(e.t=='text'||e.t=='pf')){const r=n.getBoundingClientRect();e.h=r1(r.height/g/PX);if(e.t=='text'&&e.hug)e.w=r1(r.width/g/PX)}});
  cv.insertAdjacentHTML('beforeend',(multi()?msOv():overlay(selEl()))+pathOv()+penOv());
+ if(VC){VC=0;c.scrollLeft=(c.scrollWidth-c.clientWidth)/2;c.scrollTop=(c.scrollHeight-c.clientHeight)/2}zsync();
  cv.classList.toggle('pen',tool=='pen'||tool=='free');
  $('#bar').style.display=cropId?'flex':'none';cv.classList.toggle('bgedit',sel=='bg');tbar();
  clearTimeout(tm);tm=setTimeout(persist,1500);clearTimeout(ct);ct=setTimeout(commit,350)}
@@ -333,7 +339,7 @@ function R(){const p=S.pages[cur],e=selEl(),cd=p.type=='card';if(cropId&&!(e&&e.
  $('#R').innerHTML=h}
 const panel=()=>{L();R()};
 
-const go=i=>{if(penE)penFinish();cur=i;sel=null;ms=[];cropId=null;panel();draw()};
+const go=i=>{if(penE)penFinish();VC=1;cur=i;sel=null;ms=[];cropId=null;panel();draw()};
 const setK=(k,v)=>{set(k,v);draw();panel()};
 const hexK=(k,v)=>{v=v.trim();if(/^#?[0-9a-f]{3,8}$/i.test(v))setK(k,v[0]=='#'?v:'#'+v)};
 const tog=id=>{const p=S.pages[cur];p.ids=p.ids||[];const i=p.ids.indexOf(id);i<0?p.ids.push(id):p.ids.splice(i,1);draw()};
@@ -472,7 +478,7 @@ addEventListener('keydown',ev=>{const tg=ev.target.tagName,ed=tg=='TEXTAREA'||(t
  if(/INPUT|TEXTAREA|SELECT/.test(tg))return;const o=selEl();
  if(penE){if(ev.key=='Enter'||ev.key=='Escape'){penFinish();return}if(ev.key=='Backspace'){penBack();ev.preventDefault();return}}
  if(!ev.ctrlKey&&!ev.metaKey){const k=ev.key;if(ev.shiftKey&&k=='C'){setTool('conv');return}
-  if(!ev.shiftKey&&!ev.altKey){const T={v:'sel',a:'dir',p:'pen'}[k];if(T){setTool(T);return}if(k=='+'||k=='='){setTool('add');return}if(k=='-'){setTool('del');return}}}
+  if(!ev.shiftKey&&!ev.altKey){const T={v:'sel',a:'dir',p:'pen'}[k];if(T){setTool(T);return}}}
  if(ev.key=='Escape'){cropId=null;sel=null;ms=[];panel();draw();return}
  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()=='a'){ms=allEls().filter(e=>!e.lk&&!e.hid).map(e=>e.id);sel=ms[ms.length-1]||null;if(ms.length==1)ms=[];panel();draw();ev.preventDefault();return}
  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()=='d'&&o){dup();ev.preventDefault();return}
@@ -795,8 +801,7 @@ function bgFit(m){const p=S.pages[cur];p.bgf=Object.assign(bgDef(p,SZ(p),m),{id:
 function bgEditOn(){const p=S.pages[cur];if(!p.bgImg)return;if(!p.bgf)p.bgf=Object.assign(bgDef(p,SZ(p)),{id:'bg',t:'bg'});sel='bg';ms=[];cropId=null;panel();draw()}
 const bgDone=()=>{sel=null;ms=[];panel();draw()};
 function bgRemove(){const p=S.pages[cur];p.bgImg='';p.bgf=null;if(sel=='bg')sel=null;panel();draw()}
-function bgPanel(){return `<b>Background picture</b><p class="hint">Drag the picture to move it. Drag a corner to resize it. Scroll the mouse wheel to zoom.</p><div class="sm"><button onclick="bgFit('cover')">Fill page</button><button onclick="bgFit('contain')">Fit inside</button><button onclick="bgFit('stretch')">Stretch</button></div>`+['x','y','w','h'].map(k=>F(k.toUpperCase()+' (mm)','el.'+k,'number')).join('')+`<p><button onclick="bgDone()">Done</button> <button onclick="img(S.pages[cur],'bgImg')">Change picture</button> <button onclick="bgRemove()">Remove</button></p>`}
-cvs.addEventListener('wheel',ev=>{const o=selEl();if(!o||o.t!='bg')return;ev.preventDefault();const r=cvs.getBoundingClientRect(),px=(ev.clientX-r.left)/(PX*Z),py=(ev.clientY-r.top)/(PX*Z),f=ev.deltaY<0?1.06:1/1.06;if(o.w*f<10)return;o.x=r1(px-(px-o.x)*f);o.y=r1(py-(py-o.y)*f);o.w=r1(o.w*f);o.h=r1(o.h*f);draw()},{passive:false});
+function bgPanel(){return `<b>Background picture</b><p class="hint">Drag the picture to move it. Drag a corner to resize it.</p><div class="sm"><button onclick="bgFit('cover')">Fill page</button><button onclick="bgFit('contain')">Fit inside</button><button onclick="bgFit('stretch')">Stretch</button></div>`+['x','y','w','h'].map(k=>F(k.toUpperCase()+' (mm)','el.'+k,'number')).join('')+`<p><button onclick="bgDone()">Done</button> <button onclick="img(S.pages[cur],'bgImg')">Change picture</button> <button onclick="bgRemove()">Remove</button></p>`}
 const bbox=L=>{const x0=Math.min(...L.map(e=>e.x)),y0=Math.min(...L.map(e=>e.y)),x1=Math.max(...L.map(e=>e.x+e.w)),y1=Math.max(...L.map(e=>e.y+e.h));return{x:x0,y:y0,w:x1-x0,h:y1-y0}};
 function expand(id){const e=findEl(id);return e&&e.g?allEls().filter(x=>x.g==e.g).map(x=>x.id):[id]}
 const group=()=>{const L=SL().filter(e=>!e.lk&&e.t!='bg');if(L.length<2)return;const g=uid();L.forEach(e=>e.g=g);panel();draw()};
@@ -861,7 +866,37 @@ $('#fpv').addEventListener('scroll',()=>{const n=document.elementFromPoint(mx,my
 $('#fpv').addEventListener('mouseup',()=>$('#fps').focus());
 $('#fpv').addEventListener('click',e=>{const n=e.target.closest('.fi');if(n){set(fpK,fpC[+n.dataset.i]);fpClose(1)}});
 document.addEventListener('mousedown',e=>{if(fpK!==null&&!e.target.closest('#fpl')&&!e.target.closest('.fpb'))fpClose(0)});
-addEventListener('resize',draw);
+/* ===================== ZOOM AND PAN (screen view only, PDF is not affected) ===================== */
+const VP=$('#vp');
+function zsync(){const zp=$('#zp'),zs=$('#zs');if(zp&&document.activeElement!==zp)zp.value=Math.round(Z*100);if(zs)zs.value=Math.round(1000*Math.log(Math.max(5,Math.min(1600,Z*100))/5)/Math.log(320))}
+function setZoom(nz,cx,cy){nz=Math.max(.05,Math.min(16,nz));if(!(nz>0)||Math.abs(nz-Z)<1e-4)return;
+ const r0=cvs.getBoundingClientRect(),z0=Z;if(cx==null){const pr=VP.getBoundingClientRect();cx=pr.left+VP.clientWidth/2;cy=pr.top+VP.clientHeight/2}
+ const mx=(cx-r0.left)/(PX*z0),my=(cy-r0.top)/(PX*z0);   /* page point (mm) under the cursor stays under the cursor */
+ VZ=nz;drawNow();const r2=cvs.getBoundingClientRect();
+ VP.scrollLeft+=r2.left+mx*PX*nz-cx;VP.scrollTop+=r2.top+my*PX*nz-cy;zsync();tbar()}
+const zoomBy=f=>setZoom(Z*f);
+function zoomFit(){VZ=null;VC=1;drawNow()}
+VP.addEventListener('wheel',ev=>{
+ if(ev.ctrlKey||ev.metaKey){ev.preventDefault();setZoom(Z*Math.exp(-ev.deltaY*(ev.deltaMode==1?.06:.002)),ev.clientX,ev.clientY);return}   /* Ctrl+wheel and touchpad pinch */
+ if(ev.shiftKey){ev.preventDefault();VP.scrollLeft+=(ev.deltaX||ev.deltaY)*(ev.deltaMode==1?16:1)}   /* Shift+wheel: sideways. Plain wheel and two-finger drag scroll by themselves */
+},{passive:false});
+VP.addEventListener('scroll',()=>tbar());
+function panStart(ev){ev.preventDefault();const sx=ev.clientX,sy=ev.clientY,l0=VP.scrollLeft,t0=VP.scrollTop;VP.classList.add('panning');
+ const mv=m=>{VP.scrollLeft=l0-(m.clientX-sx);VP.scrollTop=t0-(m.clientY-sy)},up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);VP.classList.remove('panning')};
+ addEventListener('mousemove',mv);addEventListener('mouseup',up)}
+VP.addEventListener('mousedown',ev=>{if(SP||ev.button==1){ev.stopPropagation();panStart(ev)}},true);   /* Space+drag or middle-button drag */
+const typingIn=t=>{const n=t&&t.tagName;return(n=='INPUT'&&!/checkbox|radio|range|button/.test(t.type))||n=='TEXTAREA'||n=='SELECT'};
+const viewLocked=()=>$('#de').style.display=='flex'||$('#tr').style.display=='flex'||fpK!==null;
+addEventListener('keydown',ev=>{
+ if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key,c=ev.code;
+  if(k=='+'||k=='='||c=='NumpadAdd'){ev.preventDefault();if(!viewLocked())zoomBy(1.25);return}
+  if(k=='-'||k=='_'||c=='NumpadSubtract'){ev.preventDefault();if(!viewLocked())zoomBy(.8);return}
+  if(k=='0'||c=='Numpad0'){ev.preventDefault();if(!viewLocked())zoomFit();return}
+  if(k=='1'||c=='Numpad1'){ev.preventDefault();if(!viewLocked())setZoom(1);return}}
+ if((ev.code=='Space'||ev.key==' ')&&!typingIn(ev.target)&&!viewLocked()){ev.preventDefault();if(!SP){SP=true;VP.classList.add('hand')}}},true);
+addEventListener('keyup',ev=>{if((ev.code=='Space'||ev.key==' ')&&SP){SP=false;VP.classList.remove('hand');ev.preventDefault()}},true);
+addEventListener('blur',()=>{SP=false;VP.classList.remove('hand')});
+addEventListener('resize',()=>{if(VZ==null)VC=1;draw()});
 (async()=>{try{fonts=fontClean(await api.fonts())}catch{}
  const im=api.loadImgs?await api.loadImgs():null;if(im)Object.assign(IMG,JSON.parse(im));
  const j=await api.load();if(j)load(j);else S.pages=defaults();
