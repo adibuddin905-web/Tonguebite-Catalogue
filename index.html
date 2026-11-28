@@ -94,6 +94,7 @@ label.rd{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;col
 #trio img,#trvec svg{display:block;max-width:none}
 #trbusy{color:#fbbf24}
 @media(max-width:900px){.trb{grid-template-columns:260px 1fr}#tr .trpane{display:none}#tr:not(.showv) #trpo{display:flex}#tr.showv #trpv{display:flex}}
+#ex{position:fixed;inset:0;z-index:70;background:#0006;display:none;align-items:center;justify-content:center}#ex>div{background:#fff;border-radius:10px;padding:16px;width:440px;max-height:86vh;overflow:auto;box-shadow:0 8px 40px #0005}#ex h3{margin:0 0 8px}#exl{max-height:34vh;overflow:auto;border:1px solid var(--bd);border-radius:6px;padding:4px 8px;margin:6px 0}#exl label{display:flex;gap:8px;align-items:center;padding:2px 0}#ex input[type=checkbox],#ex input[type=radio]{width:auto}#ex .sm{display:flex;gap:6px;margin:4px 0;flex-wrap:wrap}#ex .ft{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 #de{position:fixed;inset:0;z-index:62;background:#f3f4f6;display:none;flex-direction:column}
 .deb{flex:1;display:grid;grid-template-columns:1fr 360px;grid-template-rows:minmax(0,1fr) 215px;min-height:0}
 .depre{grid-row:1;grid-column:1;display:flex;flex-direction:column;min-width:0;min-height:0}
@@ -113,7 +114,7 @@ label.rd{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;col
 </style></head><body>
 <header class="ui"><b>Catalogue Maker</b>
 <button onclick="undo()">Undo</button><button onclick="redo()">Redo</button><button onclick="openP()">Open</button><button onclick="saveP()">Save as</button>
-<button class="pri" onclick="pdf()">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
+<button onclick="pdfThis()" title="Save only the page you are looking at as a PDF">This page as PDF</button><button class="pri" onclick="pdf()" title="Choose which pages to export">Export PDF</button><button onclick="api.update()">Check for updates</button></header>
 <aside class="side ui" id="L"></aside>
 <main id="stage" class="ui"><div id="rail"><button data-t="sel" class="on" onclick="setTool('sel')" title="Select (V)">V<small>Select</small></button><button data-t="dir" onclick="setTool('dir')" title="Direct selection: move points and handles (A)">A<small>Direct</small></button><button data-t="pen" onclick="setTool('pen')" title="Pen: click for corners, click-drag for curves (P)">P<small>Pen</small></button><button data-t="add" onclick="setTool('add')" title="Add anchor point (click on a path)">+<small>Point</small></button><button data-t="del" onclick="setTool('del')" title="Delete anchor point (click on a point)">&minus;<small>Point</small></button><button data-t="conv" onclick="setTool('conv')" title="Convert anchor point (Shift+C)">&#8736;<small>Corner</small></button><button data-t="free" onclick="setTool('free')" title="Freehand: draw with the mouse or pen">~<small>Free</small></button><button onclick="trOpen()" title="Image Trace: turn a picture into vector paths">T<small>Trace</small></button></div><div id="bar"><span>Crop mode: drag the handles to crop, drag the picture to move it</span><button onclick="fitImg(1)">Fill frame</button><button onclick="fitImg(0)">Fit box to image</button><button class="pri" onclick="cropDone()">Done</button></div><div id="vp"><div id="canvas"></div></div><div id="zbar" title="Zoom: Ctrl + / Ctrl - / Ctrl+wheel / pinch. Move: wheel, Shift+wheel, two-finger drag, Space+drag, middle-button drag. Ctrl+0 fit, Ctrl+1 100%"><button onclick="zoomBy(.8)">&minus;</button><input type="range" id="zs" min="0" max="1000" step="1" value="500" oninput="setZoom(5*Math.pow(320,this.value/1000)/100)"><button onclick="zoomBy(1.25)">+</button><input type="number" id="zp" min="5" max="1600" step="1" onchange="setZoom((+this.value||100)/100)">%<button onclick="zoomFit()">Fit</button><button onclick="setZoom(1)">100%</button></div></main>
 <aside class="side ui" id="R"></aside>
@@ -145,7 +146,7 @@ label.rd{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;col
 <datalist id="decat"></datalist>
 <div id="tb" class="ui"></div>
 <div id="fpl" class="ui"><input id="fps" placeholder="Type to search fonts, scroll to preview" oninput="fpRender(this.value,1)" onkeydown="fpKey(event)"><div class="fph"><span id="fpc"></span><button onclick="fpRefresh()">Refresh list</button></div><div id="fpv"></div></div>
-<div id="print"></div><style id="pgs"></style>
+<div id="ex" class="ui"><div><h3>Export PDF</h3><div class="sm"><button onclick="exAll(1)">All pages</button><button onclick="exAll(0)">None</button><button onclick="exCur()">Current page</button></div><div class="sm"><span>Page numbers:</span><input id="exr" placeholder="e.g. 1-3, 5" style="width:140px"><button onclick="exRange()">Tick these</button></div><div id="exl"></div><label style="display:block"><input type="radio" name="exm" value="one" checked> One PDF file with the ticked pages</label><label style="display:block"><input type="radio" name="exm" value="sep"> Each ticked page as its own PDF file (you pick a folder)</label><div id="exs" class="hint"></div><div class="ft"><button onclick="exClose()">Cancel</button><button class="pri" onclick="exGo()">Export</button></div></div></div><div id="print"></div><style id="pgs"></style>
 <script>
 const PX=3.7795,$=s=>document.querySelector(s);
 let VZ=null,VC=1,SP=false;   /* view zoom (null = fit page), centre-next-draw flag, space-bar hand tool */
@@ -415,13 +416,30 @@ async function imp(){const r=await api.sheet();if(!r)return;
  await measureAll();selP=firstId;tab='prods';panel();draw();
  alert(add+' added, '+upd+' updated'+(wi?', '+wi+' with pictures':'')+(auto?' ('+auto+' matched by file name)':'')+'.'+(same?' '+same+' have the same name as another product but a different picture, so they were kept as separate products.':'')+(skip?' '+skip+' rows without a name were skipped.':'')+(wi?'':' Pictures can be added from the Images list of each product.'))}
 function lowRes(){const out=[];[...S.pages.filter(p=>!isT(p)).flatMap(p=>p.els),...S.master].forEach(e=>{if((e.t=='image'||e.t=='logo')&&!e.hid){const iw=e.t=='logo'?S.brand.liw:e.iw;if(!(iw>0))return;const c=crop(e),d=Math.round(iw/(c.cw*e.w/25.4));if(d<150)out.push(d)}});return out}
-async function pdf(){const miss=await attachAll();if(miss&&!confirm(miss+' picture file(s) listed in your products could not be found, so those pictures will be missing from the PDF. Export anyway?'))return;await measureAll();const lr=lowRes();
- if(lr.length&&!confirm(lr.length+' picture(s) have low resolution (lowest '+Math.min(...lr)+' dpi at the size used) and may look pixelated in print. Use a bigger original photo or make it smaller on the page. Export anyway?'))return;
- PRINT=true;$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
- $('#print').innerHTML=S.pages.filter(p=>!isT(p)).map(p=>pageHTML(p)).join('');PRINT=false;
+/* ===================== EXPORT: choose pages, one PDF or one file per page ===================== */
+const exPages=()=>S.pages.map((p,i)=>[p,i]).filter(([p])=>!isT(p));
+function pdf(){const L=exPages();if(!L.length){alert('There are no pages to export.');return}
+ $('#exl').innerHTML=L.map(([p,i],n)=>`<label><input type="checkbox" data-i="${i}" checked> ${n+1}. ${esc(p.name)}</label>`).join('');$('#exs').textContent='';$('#exr').value='';$('#ex').style.display='flex'}
+const exClose=()=>{$('#ex').style.display='none'};
+const exBoxes=()=>[...$('#exl').querySelectorAll('input')];
+const exAll=v=>exBoxes().forEach(b=>b.checked=!!v);
+function exCur(){exBoxes().forEach(b=>b.checked=+b.dataset.i==cur)}
+function exRange(){const n=exBoxes().length,on=new Set();String($('#exr').value).split(',').forEach(t=>{const m=t.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;let a=+m[1],b=m[2]?+m[2]:a;if(a>b)[a,b]=[b,a];for(let k=a;k<=b;k++)if(k>=1&&k<=n)on.add(k-1)});exBoxes().forEach((b,k)=>b.checked=on.has(k))}
+function pdfThis(){const p=S.pages[cur];if(!p||isT(p)){alert('Click a normal page in the Pages list first. Templates and card designs are not exported.');return}runExport([cur],'one')}
+function exGo(){const idx=exBoxes().filter(b=>b.checked).map(b=>+b.dataset.i);if(!idx.length){$('#exs').textContent='Tick at least one page.';return}
+ const mode=document.querySelector('input[name=exm]:checked').value;exClose();runExport(idx,mode)}
+async function renderPrint(list){PRINT=true;$('#pgs').textContent=`@page{size:${S.size.w}mm ${S.size.h}mm;margin:0}`;
+ $('#print').innerHTML=list.map(p=>pageHTML(p)).join('');PRINT=false;
  if(document.fonts)await document.fonts.ready;
- const im=$('#print').querySelectorAll?[...$('#print').querySelectorAll('img')]:[];await Promise.all(im.map(i=>i.decode?i.decode().catch(()=>{}):0));
- const r=await api.pdf();$('#print').innerHTML='';if(r)alert('PDF saved:\n'+r)}
+ const im=$('#print').querySelectorAll?[...$('#print').querySelectorAll('img')]:[];await Promise.all(im.map(i=>i.decode?i.decode().catch(()=>{}):0))}
+const safeName=t=>String(t||'page').replace(/[\\/:*?"<>|]+/g,'-').trim().slice(0,60)||'page';
+async function runExport(idx,mode){const miss=await attachAll();if(miss&&!confirm(miss+' picture file(s) listed in your products could not be found, so those pictures will be missing from the PDF. Export anyway?'))return;await measureAll();const lr=lowRes();
+ if(lr.length&&!confirm(lr.length+' picture(s) have low resolution (lowest '+Math.min(...lr)+' dpi at the size used) and may look pixelated in print. Use a bigger original photo or make it smaller on the page. Export anyway?'))return;
+ const pgs=idx.map(i=>S.pages[i]);
+ if(mode=='sep'){const dir=await api.pickOutDir();if(!dir)return;const sep=dir.includes('\\')?'\\':'/';let n=0;
+  for(let k=0;k<pgs.length;k++){await renderPrint([pgs[k]]);await api.pdfTo(dir+sep+String(idx[k]+1).padStart(2,'0')+' - '+safeName(pgs[k].name)+'.pdf');n++}
+  $('#print').innerHTML='';alert(n+' PDF file(s) saved in:\n'+dir);return}
+ await renderPrint(pgs);const r=await api.pdf(pgs.length==1?safeName(pgs[0].name):'catalogue');$('#print').innerHTML='';if(r)alert('PDF saved:\n'+r)}
 async function openP(){const j=await api.open();if(j){load(j);mig();cur=0;sel=null;cropId=null;lastSize={...S.size};await measureAll();H=[];hi=-1;commit();panel();draw()}}
 const saveP=()=>api.saveAs(pack());
 
@@ -895,7 +913,7 @@ function panStart(ev){ev.preventDefault();const sx=ev.clientX,sy=ev.clientY,l0=V
  addEventListener('mousemove',mv);addEventListener('mouseup',up)}
 VP.addEventListener('mousedown',ev=>{if(SP||ev.button==1){ev.stopPropagation();panStart(ev)}},true);   /* Space+drag or middle-button drag */
 const typingIn=t=>{const n=t&&t.tagName;return(n=='INPUT'&&!/checkbox|radio|range|button/.test(t.type))||n=='TEXTAREA'||n=='SELECT'};
-const viewLocked=()=>$('#de').style.display=='flex'||$('#tr').style.display=='flex'||fpK!==null;
+const viewLocked=()=>$('#ex').style.display=='flex'||$('#de').style.display=='flex'||$('#tr').style.display=='flex'||fpK!==null;
 addEventListener('keydown',ev=>{
  if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key,c=ev.code;
   if(k=='+'||k=='='||c=='NumpadAdd'){ev.preventDefault();if(!viewLocked())zoomBy(1.25);return}
