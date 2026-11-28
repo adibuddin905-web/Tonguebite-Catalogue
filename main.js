@@ -153,11 +153,21 @@ ipcMain.handle('open', async () => {
   const r = await dialog.showOpenDialog(win, { filters: [{ name: 'Catalogue project', extensions: ['json'] }] });
   return r.canceled ? null : fs.readFileSync(r.filePaths[0], 'utf8');
 });
-ipcMain.handle('pdf', async () => {
-  const r = await dialog.showSaveDialog(win, { defaultPath: 'catalogue.pdf' });
+ipcMain.handle('pdf', async (e, name) => {
+  const r = await dialog.showSaveDialog(win, { defaultPath: String(name || 'catalogue').replace(/[\\/:*?"<>|]+/g, '-') + '.pdf', filters: [{ name: 'PDF', extensions: ['pdf'] }] });
   if (r.canceled) return false;
   fs.writeFileSync(r.filePath, await win.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true }));
   return r.filePath;
+});
+
+// Choose an output folder (for "each page as a separate file") and write one PDF straight to a path
+ipcMain.handle('pickOutDir', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Choose a folder to save the PDF files in', properties: ['openDirectory', 'createDirectory'] });
+  return r.canceled || !r.filePaths[0] ? null : r.filePaths[0];
+});
+ipcMain.handle('pdfTo', async (e, file) => {
+  fs.writeFileSync(file, await win.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true }));
+  return file;
 });
 
 autoUpdater.autoDownload = false;
